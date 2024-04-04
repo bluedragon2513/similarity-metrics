@@ -1,0 +1,2 @@
+src/data/*.h5ad
+src/__pycache__
