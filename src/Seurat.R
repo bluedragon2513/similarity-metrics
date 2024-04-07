@@ -1,0 +1,27 @@
+library(Seurat)
+library(future)
+library(pbapply)
+library(future.apply)
+source("seurat/R/utilities.R")
+source("seurat/R/clustering.R")
+source("seurat/R/convenience.R")
+source("seurat/R/data.R")
+source("seurat/R/dimensional_reduction.R")
+source("seurat/R/mixscape.R")
+source("seurat/R/objects.R")
+source("seurat/R/RcppExports.R")
+source("seurat/R/reexports.R")
+
+seurat_obj <- readRDS('seurat_object.rds')
+seurat_obj_2 <- readRDS('seurat_object_2.rds')
+data.list <- SplitObject(seurat_obj)
+data.list <- c(data.list, SplitObject(seurat_obj))
+# for (i in 1:length(data.list)) {
+#     data.list[[i]] <- NormalizeData(data.list[[i]])
+#     data.list[[i]] <- ScaleData(data.list[[i]])
+#     data.list[[i]] <- FindVariableFeatures(data.list[[i]])
+# }
+anchors <- FindIntegrationAnchors(object.list = data.list, anchor.features = 30)
+
+source("seurat/R/integration.R")
+somrthing <- IntegrateData(anchors)
