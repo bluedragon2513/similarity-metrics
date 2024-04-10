@@ -1484,6 +1484,7 @@ IntegrateData <- function(
     eps = eps,
     verbose = verbose
   )
+  return(reference.integrated)
 
   # set SCT model
   if (normalization.method == "SCT") {
@@ -4810,7 +4811,7 @@ PairwiseIntegrateReference <- function(
       obj.lengths = objects.ncell
     )
     similarity.matrix <- similarity.matrix[reference.objects, reference.objects]
-    print(similarity.matrix)
+    return(similarity.matrix);
     sample.tree <- BuildSampleTree(similarity.matrix = similarity.matrix)
     sample.tree <- AdjustSampleTree(x = sample.tree, reference.objects = reference.objects)
   }

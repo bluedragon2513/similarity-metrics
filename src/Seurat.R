@@ -2,6 +2,8 @@ library(Seurat)
 library(future)
 library(pbapply)
 library(future.apply)
+library(XML)
+library(glue)
 source("Seurat/seurat_code/utilities.R")
 source("Seurat/seurat_code/clustering.R")
 source("Seurat/seurat_code/convenience.R")
@@ -12,16 +14,35 @@ source("Seurat/seurat_code/objects.R")
 source("Seurat/seurat_code/RcppExports.R")
 source("Seurat/seurat_code/reexports.R")
 
-seurat_obj <- readRDS('seurat_object.rds')
-seurat_obj_2 <- readRDS('seurat_object_2.rds')
-data.list <- SplitObject(seurat_obj)
-data.list <- c(data.list, SplitObject(seurat_obj))
-# for (i in 1:length(data.list)) {
-#     data.list[[i]] <- NormalizeData(data.list[[i]])
-#     data.list[[i]] <- ScaleData(data.list[[i]])
-#     data.list[[i]] <- FindVariableFeatures(data.list[[i]])
-# }
+
+preprocessing <- function(list) {
+    for (i in 1:length(list)) {
+        list[[i]] <- NormalizeData(list[[i]])
+        list[[i]] <- ScaleData(list[[i]])
+        list[[i]] <- FindVariableFeatures(list[[i]])
+    }
+    return(list)
+}
+
+directory <- "/Users/carsonnannini/Research/similarity-metrics/Seurat/data"
+file_names <- list.files(path = directory, pattern = ".rds")
+data.list <- list()
+
+for (i in seq_along(file_names)) {
+    seurat_object <- readRDS(paste0(directory, "/", file_names[i]))
+    data.list <- c(data.list, list(seurat_object))
+}
+
+
 anchors <- FindIntegrationAnchors(object.list = data.list, anchor.features = 30)
 
 source("Seurat/seurat_code/integration.R")
-somrthing <- IntegrateData(anchors)
+matrix <- IntegrateData(anchors)
+data_frame <- as.data.frame(matrix)
+for(i in 1:length(file_names)) {
+    names(data_frame)[names(data_frame) == glue("V{i}")] <- glue("{file_names[i]}")
+    rownames(data_frame)[i] <- glue("{file_names[i]}")
+}
+xml_file <- "/Users/carsonnannini/Research/similarity-metrics/data/pancreas/seurat_scores.xml"
+xml_node <- asXMLNode(data_frame)
+saveXML(xml_node, file = xml_file)
