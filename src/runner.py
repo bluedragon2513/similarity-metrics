@@ -7,6 +7,7 @@ from concurrent.futures import ProcessPoolExecutor
 from scorer import *
 from adata_preprocessing import *
 from plotter import plotter
+from library import experiment_amwjmsi
 
 # constants
 data = "data/preprocessed/human_pancreas_preprocessed.h5ad"
@@ -45,3 +46,4 @@ def run(data=data,
 if __name__ == "__main__":
     run()
     run(similarity_function=amwjmsi)
+    run(similarity_function=experiment_amwjmsi)
