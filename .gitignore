@@ -1,2 +1,2 @@
-src/data/*.h5ad
+data/preprocessed/*
 src/__pycache__

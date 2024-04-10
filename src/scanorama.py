@@ -3,12 +3,14 @@ from intervaltree import IntervalTree
 from sklearn.preprocessing import normalize
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
+from fbpca import pca
+from scipy.sparse import vstack
 
 # Default parameters.
 ALPHA = 0.10
 APPROX = True
 BATCH_SIZE = 5000
-DIMRED = 100
+DIMRED = 50 # as per scIB
 HVG = None
 KNN = 20
 N_ITER = 500
@@ -18,6 +20,8 @@ VERBOSE = 24
 
 def find_alignments(datasets, knn=KNN, approx=APPROX, verbose=VERBOSE,
                     alpha=ALPHA, prenormalized=True,):
+    datasets = dimensionality_reduce(datasets)
+
     table1, _, matches = find_alignments_table(
         datasets, knn=knn, approx=approx, verbose=verbose,
         prenormalized=prenormalized,
@@ -150,3 +154,19 @@ def nn_approx(ds1, ds2, knn=KNN, metric='manhattan', n_trees=10):
             match.add((a, b_i))
 
     return match
+
+def reduce_dimensionality(X, dim_red_k=100):
+    k = min((dim_red_k, X.shape[0], X.shape[1]))
+    U, s, _ = pca(X, k=k) # Automatically centers.
+    return U[:, range(k)] * s[range(k)]
+
+# Randomized SVD.
+def dimensionality_reduce(datasets, dimred=DIMRED):
+    X = np.vstack(datasets) # the scipy version somehow errors??
+    X = reduce_dimensionality(X, dim_red_k=dimred)
+    datasets_dimred = []
+    base = 0
+    for ds in datasets:
+        datasets_dimred.append(X[base:(base + ds.shape[0]), :])
+        base += ds.shape[0]
+    return datasets_dimred

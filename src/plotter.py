@@ -11,9 +11,16 @@ def plotter(d1, d2, save_file, title=""):
     y = [d2[key] for key in d1.keys() if key in d2.keys()]
     keys = [key for key in d1.keys() if key in d2.keys()]
     
+    # configure figure
+    plt.figure(figsize=(20,20))
+    plt.rc('xtick', labelsize=20)
+    plt.rc('ytick', labelsize=20)
+    plt.rcParams.update({'font.size' : 20})
+
     plt.scatter(
         x, y,
-        c=[np.random.choice(plt.rcParams["axes.prop_cycle"].by_key()['color']) for _ in x]
+        c=[np.random.choice(plt.rcParams["axes.prop_cycle"].by_key()['color']) for _ in x],
+        s=1000
     )
 
     # calculate regression
@@ -24,31 +31,38 @@ def plotter(d1, d2, save_file, title=""):
     plt.plot(x_val, y_val)
 
     plt.title(title + f"\n{round(reg.score(xr, yr), 5)}")
-    plt.savefig(fname=save_file)
-    plt.show()
+    plt.xlabel("Batch (Ground Truth)")
+    plt.ylabel("Celltypes")
+    plt.savefig(fname=save_file+".svg", format="svg")
+    plt.savefig(fname=save_file+".png", format="png")
 
-    # make plot with annotations
-    plt.clf()
-    plt.scatter(
-        x, y,
-        c=[np.random.choice(plt.rcParams["axes.prop_cycle"].by_key()['color']) for _ in x]
-    )
-    plt.plot(x_val, y_val)
-
+    # annotate it
     for i, key in enumerate(keys):
         plt.annotate(key, (x[i], y[i]))
+    plt.savefig(fname=save_file+"-annotations.png", format="png")
+    plt.savefig(fname=save_file+"-annotations.svg", format="svg")
 
-    plt.title(title + f"\n{round(reg.score(xr, yr), 5)}")
-    plt.savefig(fname=save_file[:-3]+"annotations.png")
     plt.show()
 
 
 
 
 if __name__ == "__main__":
-    with open("data/pancreas/pancreas-batch-scores.pkl", "rb") as f:
+    with open("data/pancreas/pancreas-batch-scores-adjusted.pkl", "rb") as f:
         batch_scores = pickle.load(f)
-    with open("data/pancreas/pancreas-celltype-scores.pkl", "rb") as f:
+    with open("data/pancreas/pancreas-celltype-scores-adjusted.pkl", "rb") as f:
         celltype_scores = pickle.load(f)
-    print(celltype_scores)
-    plotter(batch_scores, celltype_scores, "data/pancreas/pancreas-mwjmsmi.png", title="Pancreas: batch vs. celltype (Scanorama)")
+    # print(batch_scores)
+    # print(celltype_scores)
+    # print("begin")
+    # for k, v in batch_scores.items():
+    #     if k[0] == k[1]:
+    #         print(k)
+    # for k, v in celltype_scores.items():
+    #     if k[0] == k[1]:
+    #         print(k)
+    # print("end")
+    
+    batch_scores = {k:v for k, v in batch_scores.items() if k[0] != k[1]}
+    celltype_scores = {k:v for k, v in celltype_scores.items() if k[0] != k[1]}
+    plotter(batch_scores, celltype_scores, "data/pancreas/pancreas-amwjmsmi", title="Pancreas: batch vs. celltype (Scanorama)")
