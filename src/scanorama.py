@@ -5,6 +5,8 @@ from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from fbpca import pca
 from scipy.sparse import vstack
+import anndata as ad
+from adata_preprocessing import scib_normalize
 
 # Default parameters.
 ALPHA = 0.10
@@ -17,6 +19,16 @@ N_ITER = 500
 PERPLEXITY = 1200
 SIGMA = 15
 VERBOSE = 24
+
+def scanorama(datasets, normalize=False, **kwargs):
+    if normalize:
+        adata = ad.AnnData(np.concatenate((datasets[0], datasets[1])))
+        adata = scib_normalize(adata)
+        datasets[0] = adata.X[:len(datasets[0])]
+        datasets[1] = adata.X[len(datasets[0]):]
+
+    _, _, t = find_alignments(datasets, **kwargs)
+    return 0 if (0,1) not in t else t[(0,1)]
 
 def find_alignments(datasets, knn=KNN, approx=APPROX, verbose=VERBOSE,
                     alpha=ALPHA, prenormalized=True,):
