@@ -108,7 +108,7 @@ def experiment_amwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, norm
     adatas1 = [adata1.X[adata1.obs['celltype'] == c] for c in all_cell_types]
     adatas2 = [adata2.X[adata2.obs['celltype'] == c] for c in all_cell_types]
     # print(adatas1); print(adatas2)
-
+    mins = min_count(adata1, adata2, all_cell_types)
     sum = 0
     maxs = 0
     unmatched1 = [i for i in range(len(adatas1))] # indices in adatasX that are not matched
@@ -123,6 +123,7 @@ def experiment_amwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, norm
         for j in unmatched2:
             if (len(adatas2[j]) == 0):
                 continue
+            
             weight = algorithm([adatas1[i], adatas2[j]], normalize=normalize)
             edge_dict[(i,j)] = weight
             edges.append((i,j,weight))

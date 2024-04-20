@@ -10,7 +10,6 @@ def plotter(d1, d2, save_file, title="", annotations=None):
     x = [d1[key] for key in d1.keys() if key in d2.keys()]
     y = [d2[key] for key in d1.keys() if key in d2.keys()]
     keys = [key for key in d1.keys() if key in d2.keys()]
-    
     # configure figure
     plt.figure(figsize=(20,20))
     plt.rc('xtick', labelsize=20)
