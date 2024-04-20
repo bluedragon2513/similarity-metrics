@@ -9,6 +9,7 @@ from adata_preprocessing import *
 from plotter import plotter
 from library import experiment_amwjmsi
 from scanorama import scanorama
+from stress import kruskal
 
 # constants
 data = "data/preprocessed/human_pancreas_preprocessed.h5ad"
@@ -65,6 +66,6 @@ def run(data=data,
 
 # main
 if __name__ == "__main__":
-    run(normalize=True)
-    run(similarity_function=amwjmsi, normalize=True)
-    run(similarity_function=experiment_amwjmsi, normalize=True)
+    run(algorithm=kruskal, normalize=True)
+    run(algorithm=kruskal, similarity_function=amwjmsi, normalize=True)
+    # run(algorithm=kruskal, similarity_function=experiment_amwjmsi, normalize=False)
