@@ -19,6 +19,7 @@ folder = "data/"
 batch_save_file = "batch-scores"
 celltype_save_file = "celltype-scores"
 similarity_function = mwjmsi
+dataset_normalize = None
 batch_normalize = None
 celltype_normalize = None
 
@@ -30,9 +31,14 @@ def run(data=data,
         batch_save_file=batch_save_file, 
         celltype_save_file=celltype_save_file,
         similarity_function=similarity_function,
+        dataset_normalize=dataset_normalize,
         batch_normalize=batch_normalize,
         celltype_normalize=celltype_normalize):
-    adatas = filter_batches(sc.read_h5ad(data))
+    if dataset_normalize:
+        adatas = filter_batches(dataset_normalize(raw_counts(sc.read_h5ad(data))))
+    else:
+        adatas = filter_batches(raw_counts(sc.read_h5ad(data)))
+    
 
     scorer_batch(adatas, 
                  folder=folder, 
@@ -75,14 +81,14 @@ def seurat_run():
 
 # main
 if __name__ == "__main__":
-    # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=None)
-    # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=None, similarity_function=amwjmsi)
+    run(algorithm=scanorama, dataset_normalize=scib_normalize)
+    run(algorithm=scanorama, dataset_normalize=scib_normalize, similarity_function=amwjmsi)
     # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None)
     # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, similarity_function=amwjmsi)
     # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize)
     # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize, similarity_function=amwjmsi)
-    run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad")
-    run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", similarity_function=amwjmsi)
+    # run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad")
+    # run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", similarity_function=amwjmsi)
 
     print("FINISHED!")
 

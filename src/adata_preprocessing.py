@@ -41,12 +41,15 @@ def filter_celltypes(adata):
     return adatas
 
 def filter_hvg(adata):
-    hvg_filter = sc.pp.highly_variable_genes(adata, layer='counts', n_top_genes=2000, n_bins=20, flavor="cell_ranger", inplace=False)['highly_variable']
+    if (len(adata.X) <= 2000):
+        return adata
+    sc.pp.filter_genes(adata, min_cells=5)
+    hvg_filter = sc.pp.highly_variable_genes(adata, n_top_genes=2000, n_bins=20, flavor="cell_ranger", inplace=False)['highly_variable']
     anndata = ad.AnnData(
-        X=adata.layers['counts'][:,hvg_filter],
+        X=adata.X[:,hvg_filter],
         obs=adata.obs.copy(),
     )
-    anndata.layers['counts'] = adata.layers['counts'][:,hvg_filter]
+    anndata.layers['counts'] = adata.X[:,hvg_filter]
     return anndata
 
 def scib_normalize(adata):
@@ -56,6 +59,14 @@ def scib_normalize(adata):
 
 def scan_normalize(adata, axis=1):
     normalize(adata.X, axis=axis)
+
+def raw_counts(adata):
+    anndata = ad.AnnData(
+        X=adata.layers['counts'],
+        obs=adata.obs.copy(),
+    )
+    anndata.layers['counts'] = adata.layers['counts']
+    return anndata
 
 # main method
 if __name__ == "__main__":
