@@ -29,7 +29,7 @@ def plotter(d1, d2, save_file, title="", annotations=None):
     y_val = [reg.intercept_[0], reg.intercept_[0] + reg.coef_[0][0]*np.max(x)]
     plt.plot(x_val, y_val)
 
-    plt.title(title + f"\n{round(reg.score(xr, yr), 5)}")
+    plt.title(title + f"\nR^2: {round(reg.score(xr, yr), 5)}\n {round(np.sum(np.array(x)-np.array(y)), 5)}")
     plt.xlabel("Batch")
     plt.ylabel("Celltypes (Ground Truth)")
     plt.savefig(fname=save_file+".svg", format="svg")
@@ -58,16 +58,6 @@ if __name__ == "__main__":
         batch_scores_jaccard = pickle.load(f)
     with open("data/scanorama/pancreas/celltype-scores-adjusted.pkl", "rb") as f:
         celltype_scores = pickle.load(f)
-    # print(batch_scores)
-    # print(celltype_scores)
-    # print("begin")
-    # for k, v in batch_scores.items():
-    #     if k[0] == k[1]:
-    #         print(k)
-    # for k, v in celltype_scores.items():
-    #     if k[0] == k[1]:
-    #         print(k)
-    # print("end")
     
     batch_scores = {k:v for k, v in batch_scores.items() if k[0] != k[1]}
     celltype_scores = {k:v for k, v in celltype_scores.items() if k[0] != k[1]}

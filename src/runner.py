@@ -12,13 +12,15 @@ from scanorama import scanorama
 from stress import kruskal
 
 # constants
-data = "data/preprocessed/human_pancreas_preprocessed.h5ad"
+data = "data/preprocessed/human_pancreas_norm_complexBatch.h5ad"
 algorithm = scanorama
 dataset_name = "pancreas"
 folder = "data/"
 batch_save_file = "batch-scores"
 celltype_save_file = "celltype-scores"
 similarity_function = mwjmsi
+batch_normalize = None
+celltype_normalize = None
 
 # functions
 def run(data=data, 
@@ -28,7 +30,8 @@ def run(data=data,
         batch_save_file=batch_save_file, 
         celltype_save_file=celltype_save_file,
         similarity_function=similarity_function,
-        normalize=False):
+        batch_normalize=batch_normalize,
+        celltype_normalize=celltype_normalize):
     adatas = filter_batches(sc.read_h5ad(data))
 
     scorer_batch(adatas, 
@@ -36,14 +39,15 @@ def run(data=data,
                  algorithm=algorithm, 
                  dataset_name=dataset_name, 
                  save_file=batch_save_file,
-                 normalize=normalize)
+                 batch_normalize=batch_normalize)
     scorer_celltype(adatas, 
                     folder=folder, 
                     algorithm=algorithm, 
                     dataset_name=dataset_name, 
                     save_file=celltype_save_file, 
                     similarity_function=similarity_function,
-                    normalize=normalize)
+                    batch_normalize=batch_normalize,
+                    celltype_normalize=celltype_normalize)
     
     with open(f"{folder}{algorithm.__name__}/{dataset_name}/{batch_save_file}.pkl", "rb") as f:
         batch_scores = pickle.load(f)
@@ -71,6 +75,16 @@ def seurat_run():
 
 # main
 if __name__ == "__main__":
-    run(algorithm=kruskal, normalize=True)
-    run(algorithm=kruskal, similarity_function=amwjmsi, normalize=True)
+    # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=None)
+    # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=None, similarity_function=amwjmsi)
+    # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None)
+    # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, similarity_function=amwjmsi)
+    # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize)
+    # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize, similarity_function=amwjmsi)
+    run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad")
+    run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", similarity_function=amwjmsi)
+
+    print("FINISHED!")
+
+    # run(algorithm=scanorama, similarity_function=amwjmsi, batch_normalize=scib_normalize)
     # run(algorithm=kruskal, similarity_function=experiment_amwjmsi, normalize=False)

@@ -2,9 +2,10 @@
     # standard libraries
 import numpy as np
 import networkx as nx
+import scanpy as sc
+import anndata as ad
     # user libraries
 from scanorama import find_alignments, scanorama
-import scanpy as sc
 
     # helper function for mwjmsi
 def min_count(adata1, adata2, all_cell_types):
@@ -32,7 +33,18 @@ def gjsi(adata1, adata2, all_cell_types):
     return np.sum(mins)/maxs
 
 # Modified Weighted-Jaccard-Multiset Similarity Index
-def mwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, normalize=False):
+def mwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, batch_normalize=None, celltype_normalize=None):
+    assert \
+        (batch_normalize and not celltype_normalize) or \
+        (not batch_normalize and celltype_normalize) or \
+        (not batch_normalize and not celltype_normalize)
+    
+    if batch_normalize:
+        adata = ad.AnnData(np.concatenate((adata1.X, adata2.X)))
+        adata = batch_normalize(adata)
+        adata1.X = adata.X[:len(adata1.X)]
+        adata2.X = adata.X[len(adata1.X):]
+
     adatas1 = [adata1.X[adata1.obs['celltype'] == c] for c in all_cell_types]
     adatas2 = [adata2.X[adata2.obs['celltype'] == c] for c in all_cell_types]
 
@@ -43,12 +55,23 @@ def mwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, normalize=False)
         if adatas1[ct].shape[0] == 0 or adatas2[ct].shape[0] == 0:
             continue
         datas = [adatas1[ct], adatas2[ct]]
-        sum += mins[ct][ct] * algorithm(datas, normalize=normalize)
+        sum += mins[ct][ct] * algorithm(datas, normalize=celltype_normalize)
 
     return sum/max_count(adata1, adata2, all_cell_types)
 
 # Adjusted Modified Weighted-Jaccard-Multiset Similarity Index
-def amwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, normalize=False):
+def amwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, batch_normalize=None, celltype_normalize=None):
+    assert \
+        (batch_normalize and not celltype_normalize) or \
+        (not batch_normalize and celltype_normalize) or \
+        (not batch_normalize and not celltype_normalize)
+    
+    if batch_normalize:
+        adata = ad.AnnData(np.concatenate((adata1.X, adata2.X)))
+        adata = batch_normalize(adata)
+        adata1.X = adata.X[:len(adata1.X)]
+        adata2.X = adata.X[len(adata1.X):]
+    
     adatas1 = [adata1.X[adata1.obs['celltype'] == c] for c in all_cell_types]
     adatas2 = [adata2.X[adata2.obs['celltype'] == c] for c in all_cell_types]
     # print(adatas1); print(adatas2)
@@ -68,7 +91,7 @@ def amwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, normalize=False
             unmatched1.append(ct)
             continue
         datas = [adatas1[ct], adatas2[ct]]
-        sum += mins[ct][ct] * algorithm(datas, normalize=normalize)
+        sum += mins[ct][ct] * algorithm(datas, normalize=celltype_normalize)
         maxs += max(len(adatas1[ct]), len(adatas2[ct]))
 
     # get maximum weight bipartite graphs
@@ -76,7 +99,7 @@ def amwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, normalize=False
     edges = []
     for i in unmatched1:
         for j in unmatched2:
-            weight = algorithm([adatas1[i], adatas2[j]], normalize=normalize)
+            weight = algorithm([adatas1[i], adatas2[j]], normalize=celltype_normalize)
             edges.append((i,j,weight))
             edge_dict[(i,j)] = weight
     # compute maximum weight edges

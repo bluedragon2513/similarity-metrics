@@ -20,10 +20,10 @@ PERPLEXITY = 1200
 SIGMA = 15
 VERBOSE = 24
 
-def scanorama(datasets, normalize=False, **kwargs):
+def scanorama(datasets, normalize=None, **kwargs):
     if normalize:
         adata = ad.AnnData(np.concatenate((datasets[0], datasets[1])))
-        adata = scib_normalize(adata)
+        adata = normalize(adata)
         datasets[0] = adata.X[:len(datasets[0])]
         datasets[1] = adata.X[len(datasets[0]):]
 
