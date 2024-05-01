@@ -5,6 +5,8 @@ from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from fbpca import pca
 from scipy.sparse import vstack
+import anndata as ad
+from adata_preprocessing import scib_normalize
 
 # Default parameters.
 ALPHA = 0.10
@@ -17,6 +19,16 @@ N_ITER = 500
 PERPLEXITY = 1200
 SIGMA = 15
 VERBOSE = 24
+
+def scanorama(datasets, normalize=None, **kwargs):
+    if normalize:
+        adata = ad.AnnData(np.concatenate((datasets[0], datasets[1])))
+        adata = normalize(adata)
+        datasets[0] = adata.X[:len(datasets[0])]
+        datasets[1] = adata.X[len(datasets[0]):]
+
+    _, _, t = find_alignments(datasets, **kwargs)
+    return 0 if (0,1) not in t else t[(0,1)]
 
 def find_alignments(datasets, knn=KNN, approx=APPROX, verbose=VERBOSE,
                     alpha=ALPHA, prenormalized=True,):
@@ -51,6 +63,7 @@ def find_alignments_table(datasets, knn=KNN, approx=APPROX, verbose=VERBOSE,
     table1 = {}
     if verbose > 1:
         table_print = np.zeros((len(datasets), len(datasets)))
+
     for i in range(len(datasets)):
         for j in range(len(datasets)):
             if i >= j:
@@ -61,6 +74,9 @@ def find_alignments_table(datasets, knn=KNN, approx=APPROX, verbose=VERBOSE,
             match_ji = set([ (b, a) for a, b in table[(j, i)] ])
             matches[(i, j)] = match_ij & match_ji
 
+            # print(f"{len(set([ idx for idx, _ in matches[(i, j)] ]))} {len(set([ idx for _, idx in matches[(i, j)] ]))}")
+            # seurat anchor score (with sets)
+            # table1[(i,j)] = min(datasets[i].shape[0], datasets[j].shape[0])/(float(len(set([ idx for idx, _ in matches[(i, j)] ])))+float(len(set([ idx for _, idx in matches[(i, j)] ]))))
             table1[(i, j)] = (max(
                 float(len(set([ idx for idx, _ in matches[(i, j)] ]))) /
                 datasets[i].shape[0],

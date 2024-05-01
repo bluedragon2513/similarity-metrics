@@ -2,8 +2,10 @@
     # standard libraries
 import numpy as np
 import networkx as nx
+import scanpy as sc
+import anndata as ad
     # user libraries
-from scanorama import find_alignments
+from scanorama import find_alignments, scanorama
 
     # helper function for mwjmsi
 def min_count(adata1, adata2, all_cell_types):
@@ -19,11 +21,38 @@ def min_count(adata1, adata2, all_cell_types):
 
     # helper function for mwjmsi
 def max_count(adata1, adata2, all_cell_types):
-    count = np.sum([max(len(adata1[adata1.obs['celltype'] == ct]),len(adata2[adata2.obs['celltype'] == ct])) for ct in all_cell_types])
-    return count
+    maxs = 0
+    for ct in all_cell_types:
+        maxs += max(len(adata1[adata1.obs['celltype'] == ct]), len(adata2[adata2.obs['celltype'] == ct]))
+    return maxs
+
+# Generalized Jaccard Similarity Index
+def gjsi(adata1, adata2, all_cell_types):
+    mins = np.sum([min(len(adata1[adata1.obs['celltype'] == ct]),len(adata2[adata2.obs['celltype'] == ct])) for ct in all_cell_types])
+    maxs = max_count(adata1, adata2, all_cell_types)
+    return np.sum(mins)/maxs
 
 # Modified Weighted-Jaccard-Multiset Similarity Index
-def mwjmsi(adata1, adata2, all_cell_types):
+def mwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, batch_normalize=None, celltype_normalize=None, **kwargs):
+    assert \
+        (batch_normalize and not celltype_normalize) or \
+        (not batch_normalize and celltype_normalize) or \
+        (not batch_normalize and not celltype_normalize)
+    
+    if batch_normalize:
+        adata = ad.AnnData(np.concatenate((adata1.X, adata2.X)))
+        adata = batch_normalize(adata)
+        adata1 = ad.AnnData(adata.X[:len(adata1.X)], obs=adata.obs[0:len(adata1.X)])
+        adata2 = ad.AnnData(adata.X[len(adata1.X):], obs=adata.obs[len(adata1.X):])
+        print(adata1.obs)
+        # adata1.X = adata.X[:len(adata1.X)]
+        # adata2.X = adata.X[len(adata1.X):]
+
+        # adata = ad.AnnData(np.concatenate((datasets[0], datasets[1])))
+        # adata = normalize(adata)
+        # datasets[0] = adata.X[:len(datasets[0])]
+        # datasets[1] = adata.X[len(datasets[0]):]
+
     adatas1 = [adata1.X[adata1.obs['celltype'] == c] for c in all_cell_types]
     adatas2 = [adata2.X[adata2.obs['celltype'] == c] for c in all_cell_types]
 
@@ -34,13 +63,25 @@ def mwjmsi(adata1, adata2, all_cell_types):
         if adatas1[ct].shape[0] == 0 or adatas2[ct].shape[0] == 0:
             continue
         datas = [adatas1[ct], adatas2[ct]]
-        _, _, t = find_alignments(datas, verbose=1, knn=20)
-        sum += mins[ct][ct] * t[(0,1)]
+        sum += mins[ct][ct] * algorithm(datas, normalize=celltype_normalize, **kwargs)
 
     return sum/max_count(adata1, adata2, all_cell_types)
 
 # Adjusted Modified Weighted-Jaccard-Multiset Similarity Index
-def amwjmsi(adata1, adata2, all_cell_types):
+def amwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, batch_normalize=None, celltype_normalize=None, **kwargs):
+    assert \
+        (batch_normalize and not celltype_normalize) or \
+        (not batch_normalize and celltype_normalize) or \
+        (not batch_normalize and not celltype_normalize)
+    
+    if batch_normalize:
+        adata = ad.AnnData(np.concatenate((adata1.X, adata2.X)))
+        adata = batch_normalize(adata)
+        adata1 = ad.AnnData(adata.X[:len(adata1.X)], obs=adata.obs[0:len(adata1.X)])
+        adata2 = ad.AnnData(adata.X[len(adata1.X):], obs=adata.obs[len(adata1.X):])
+        # adata1.X = adata.X[:len(adata1.X)]
+        # adata2.X = adata.X[len(adata1.X):]
+    
     adatas1 = [adata1.X[adata1.obs['celltype'] == c] for c in all_cell_types]
     adatas2 = [adata2.X[adata2.obs['celltype'] == c] for c in all_cell_types]
     # print(adatas1); print(adatas2)
@@ -60,9 +101,7 @@ def amwjmsi(adata1, adata2, all_cell_types):
             unmatched1.append(ct)
             continue
         datas = [adatas1[ct], adatas2[ct]]
-        _, _, t = find_alignments(datas, verbose=1, knn=20)
-        # print(f"\t{mins[ct][ct]}")
-        sum += mins[ct][ct] * t[(0,1)]
+        sum += mins[ct][ct] * algorithm(datas, normalize=celltype_normalize, **kwargs)
         maxs += max(len(adatas1[ct]), len(adatas2[ct]))
 
     # get maximum weight bipartite graphs
@@ -70,8 +109,7 @@ def amwjmsi(adata1, adata2, all_cell_types):
     edges = []
     for i in unmatched1:
         for j in unmatched2:
-            _, _, t = find_alignments([adatas1[i], adatas2[j]], verbose=1, knn=20)
-            weight = t[(0,1)]
+            weight = algorithm([adatas1[i], adatas2[j]], normalize=celltype_normalize, **kwargs)
             edges.append((i,j,weight))
             edge_dict[(i,j)] = weight
     # compute maximum weight edges
@@ -99,30 +137,15 @@ def amwjmsi(adata1, adata2, all_cell_types):
     return sum/maxs
 
 # Modified Weighted-Jaccard-Multiset Similarity Index
-def experiment_amwjmsi(adata1, adata2, all_cell_types):
+def experiment_amwjmsi(adata1, adata2, all_cell_types, algorithm=scanorama, normalize=False):
     adatas1 = [adata1.X[adata1.obs['celltype'] == c] for c in all_cell_types]
     adatas2 = [adata2.X[adata2.obs['celltype'] == c] for c in all_cell_types]
     # print(adatas1); print(adatas2)
-
     mins = min_count(adata1, adata2, all_cell_types)
     sum = 0
     maxs = 0
     unmatched1 = [i for i in range(len(adatas1))] # indices in adatasX that are not matched
     unmatched2 = [j for j in range(len(adatas2))] # indices in adatasX that are not matched
-    # compute matched indices
-    # for ct in range(len(all_cell_types)):
-    #     if adatas1[ct].shape[0] == 0:
-    #         if adatas2[ct].shape[0] != 0:
-    #             unmatched2.append(ct)
-    #         continue
-    #     if adatas2[ct].shape[0] == 0:
-    #         unmatched1.append(ct)
-    #         continue
-    #     datas = [adatas1[ct], adatas2[ct]]
-    #     _, _, t = find_alignments(datas, verbose=1, knn=20)
-    #     # print(f"\t{mins[ct][ct]}")
-    #     sum += mins[ct][ct] * t[(0,1)]
-    #     maxs += max(len(adatas1[ct]), len(adatas2[ct]))
 
     # get maximum weight bipartite graphs
     edge_dict = {}
@@ -133,8 +156,8 @@ def experiment_amwjmsi(adata1, adata2, all_cell_types):
         for j in unmatched2:
             if (len(adatas2[j]) == 0):
                 continue
-            _, _, t = find_alignments([adatas1[i], adatas2[j]], verbose=1, knn=20)
-            weight = t[(0,1)]
+            
+            weight = algorithm([adatas1[i], adatas2[j]], normalize=normalize)
             edge_dict[(i,j)] = weight
             edges.append((i,j,weight))
     # compute maximum weight edges

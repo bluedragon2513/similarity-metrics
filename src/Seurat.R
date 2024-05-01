@@ -2,7 +2,6 @@ library(Seurat)
 library(future)
 library(pbapply)
 library(future.apply)
-library(XML)
 library(glue)
 source("Seurat/seurat_code/utilities.R")
 source("Seurat/seurat_code/clustering.R")
@@ -24,25 +23,21 @@ preprocessing <- function(list) {
     return(list)
 }
 
-directory <- "/Users/carsonnannini/Research/similarity-metrics/Seurat/data"
-file_names <- list.files(path = directory, pattern = ".rds")
-data.list <- list()
-
-for (i in seq_along(file_names)) {
-    seurat_object <- readRDS(paste0(directory, "/", file_names[i]))
-    data.list <- c(data.list, list(seurat_object))
+run_seurat <- function(path) {
+    directory <- path
+    file_names <- list.files(path = directory, pattern = ".rds")
+    data.list <- list()
+    for (i in seq_along(file_names)) {
+        seurat_object <- readRDS(paste0(directory, "/", file_names[i]))
+        data.list <- c(data.list, list(seurat_object))
+    }
+    anchors <- FindIntegrationAnchors(object.list = data.list, anchor.features = 30)
+    source("Seurat/seurat_code/integration.R")
+    matrix <- IntegrateData(anchors)
+    data_frame <- as.data.frame(matrix)
+    for(i in 1:length(file_names)) {
+        names(data_frame)[names(data_frame) == glue("V{i}")] <- glue("{file_names[i]}")
+        rownames(data_frame)[i] <- glue("{file_names[i]}")
+    }
+    write.csv(data_frame, "/Users/carsonnannini/Research/similarity-metrics/data/pancreas/celltype_scores_seurat.csv")
 }
-
-
-anchors <- FindIntegrationAnchors(object.list = data.list, anchor.features = 30)
-
-source("Seurat/seurat_code/integration.R")
-matrix <- IntegrateData(anchors)
-data_frame <- as.data.frame(matrix)
-for(i in 1:length(file_names)) {
-    names(data_frame)[names(data_frame) == glue("V{i}")] <- glue("{file_names[i]}")
-    rownames(data_frame)[i] <- glue("{file_names[i]}")
-}
-xml_file <- "/Users/carsonnannini/Research/similarity-metrics/data/pancreas/seurat_scores.xml"
-xml_node <- asXMLNode(data_frame)
-saveXML(xml_node, file = xml_file)
