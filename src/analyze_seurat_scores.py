@@ -3,8 +3,8 @@ import scanpy as sc
 import matplotlib.pyplot as plt
 import numpy as np
 import networkx as nx
-from scorer import *
-from adata_preprocessing import *
+from library.scorer import *
+from library.adata_preprocessing import *
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
