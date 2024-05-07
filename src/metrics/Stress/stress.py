@@ -1,7 +1,7 @@
 import anndata as ad
 import numpy as np
-from library.adata_preprocessing import scib_normalize
-from metrics.Stress.metrics import MetricsData
+from src.library.adata_preprocessing import scib_normalize
+from src.metrics.Stress.metrics import MetricsData
 
 def kruskal(datasets, normalize=False, **kwargs):
     if normalize:

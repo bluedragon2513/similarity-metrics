@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from typing import List, Dict, Tuple
     # user libraries
-from library.scorer import *
+from src.library.scorer import *
 
 def plotter(
         d1: Dict[Tuple[str, str], float], 

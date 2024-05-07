@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 from sklearn.metrics import pairwise_distances
-from metrics.Stress import graph_io
+from src.metrics.Stress import graph_io
 
 
 def optimize_scale(X, D, func):

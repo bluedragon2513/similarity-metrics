@@ -6,10 +6,12 @@ import pickle
 from tqdm import trange
 from typing import List, Callable
     # user libraries
-from metrics.Scanorama.scanorama import scanorama
-from library.combiner import mwjmsi, amwjmsi, gjsi
-from library.scorer import *
-from library.adata_preprocessing import *
+import os
+print(f"{os.getcwd()}")
+from src.metrics.Scanorama.scanorama import scanorama
+from src.library.combiner import mwjmsi, amwjmsi, gjsi
+from src.library.scorer import *
+from src.library.adata_preprocessing import *
 import pandas as pd
 # from seurat import * // for anthony to run
 

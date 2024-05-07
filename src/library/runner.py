@@ -1,13 +1,16 @@
 # imports
     # standard
 import scanpy as sc
+import sys
+import os
+sys.path.append(os.getcwd())
     # user
 # from scorer_parallel import *
-from library.scorer import *
-from library.adata_preprocessing import *
-from library.plotter import plotter
-from metrics.Scanorama.scanorama import scanorama
-from metrics.Stress.stress import kruskal
+from src.library.scorer import *
+from src.library.adata_preprocessing import *
+from src.library.plotter import plotter
+from src.metrics.Scanorama.scanorama import scanorama
+from src.metrics.Stress.stress import kruskal
 
 # constants
 data = "data/pancreas/human_pancreas_norm_complexBatch.h5ad"
@@ -102,33 +105,39 @@ def seurat_run():
 
 # main
 if __name__ == "__main__":
+    print("1")
     # run(algorithm=scanorama, dataset_normalize=scib_normalize, verbose=False)
     # run(algorithm=scanorama, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
+    # print("2")
     # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)
-    # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, similarity_function=amwjmsi, verbose=False)
+    # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, combiner=amwjmsi, verbose=False)
+    # print("3")
     # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize, verbose=False)
-    # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize, similarity_function=amwjmsi, verbose=False)
+    # print("3.5")
+    # run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
+    # print("4")
     # run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", verbose=False)
-    # run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", similarity_function=amwjmsi, verbose=False)
+    # run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", combiner=amwjmsi, verbose=False)
 
     # print("1")
     # run(algorithm=kruskal, dataset_normalize=scib_normalize, verbose=False)
     # print("2")
     # run(algorithm=kruskal, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
-    print("3")
-    run(algorithm=kruskal, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)
-    print("4")
-    run(algorithm=kruskal, batch_normalize=scib_normalize, celltype_normalize=None, similarity_function=amwjmsi, verbose=False)
-    print("5")
-    run(algorithm=kruskal, batch_normalize=None, celltype_normalize=scib_normalize, verbose=False)
-    print("6")
-    run(algorithm=kruskal, batch_normalize=None, celltype_normalize=scib_normalize, similarity_function=amwjmsi, verbose=False)
-    print("7")
-    run(algorithm=kruskal, verbose=False)
-    print("8")
-    run(algorithm=kruskal, similarity_function=amwjmsi, verbose=False)
+    # print("3")
+    # run(algorithm=kruskal, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)
+    # print("4")
+    # run(algorithm=kruskal, batch_normalize=scib_normalize, celltype_normalize=None, combiner=amwjmsi, verbose=False)
+    # print("5")
+    # run(algorithm=kruskal, batch_normalize=None, celltype_normalize=scib_normalize, verbose=False)
+    # print("6")
+    # run(algorithm=kruskal, batch_normalize=None, celltype_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
+    # print("7")
+    # run(algorithm=kruskal, verbose=False)
+    # print("8")
+    # run(algorithm=kruskal, combiner=amwjmsi, verbose=False)
 
     print("FINISHED!")
 
-    # run(algorithm=scanorama, similarity_function=amwjmsi, batch_normalize=scib_normalize)
-    # run(algorithm=kruskal, similarity_function=experiment_amwjmsi, normalize=False)
+    # run(algorithm=scanorama, combiner=amwjmsi, batch_normalize=scib_normalize)
+    # run(algorithm=kruskal, combiner=experiment_amwjmsi, normalize=False)
+    pass

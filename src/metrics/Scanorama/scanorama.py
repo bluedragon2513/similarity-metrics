@@ -9,7 +9,7 @@ from fbpca import pca
 from scipy.sparse import vstack
 import anndata as ad
     # user libraries
-from library.adata_preprocessing import scib_normalize
+from src.library.adata_preprocessing import scib_normalize
 
 # Default parameters.
 ALPHA = 0.10

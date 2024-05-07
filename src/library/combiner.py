@@ -6,7 +6,7 @@ import scanpy as sc
 from anndata import AnnData
 from typing import List, Callable
     # user libraries
-from metrics.Scanorama.scanorama import find_alignments, scanorama
+from src.metrics.Scanorama.scanorama import find_alignments, scanorama
 
     # helper function
 def count(
