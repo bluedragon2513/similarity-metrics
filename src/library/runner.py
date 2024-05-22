@@ -1,40 +1,40 @@
 # imports
-    # standard
+    # standard libraries
 import scanpy as sc
-import sys
-import os
+import sys, os
 sys.path.append(os.getcwd())
-    # user
-# from scorer_parallel import *
+    # user libraries
 from src.library.scorer import *
 from src.library.adata_preprocessing import *
 from src.library.plotter import plotter
+from src.library.json_handler import *
 from src.metrics.Scanorama.scanorama import scanorama
 from src.metrics.Stress.stress import kruskal
 
 # constants
-data = "data/pancreas/human_pancreas_norm_complexBatch.h5ad"
-algorithm = scanorama
-dataset_name = "pancreas"
-data_folder = "data"
-batch_save_file = "batch-scores"
-celltype_save_file = "celltype-scores"
-combiner = mwjmsi
-dataset_normalize = None
-batch_normalize = None
-celltype_normalize = None
+DATA = "data/pancreas/human_pancreas_norm_complexBatch.h5ad"
+ALGORITHM = scanorama
+DATASET_NAME = "pancreas"
+DATA_FOLDER = "data"
+BATCH_SAVE_FILE = "batch-scores"
+CELLTYPE_SAVE_FILE = "celltype-scores"
+COMBINER = mwjmsi
+DATASET_NORMALIZE = None
+BATCH_NORMALIZE = None
+CELLTYPE_NORMALIZE = None
+
 
 # functions
-def run(data: str=data, 
-        algorithm: Callable=algorithm, 
-        dataset_name: str=dataset_name, 
-        data_folder: str=data_folder, 
-        batch_save_file: str=batch_save_file, 
-        celltype_save_file: str=celltype_save_file,
-        combiner: Callable=combiner,
-        dataset_normalize: Callable=dataset_normalize,
-        batch_normalize: Callable=batch_normalize,
-        celltype_normalize: Callable=celltype_normalize,
+def run(data: str=DATA, 
+        algorithm: Callable=ALGORITHM, 
+        dataset_name: str=DATASET_NAME, 
+        data_folder: str=DATA_FOLDER, 
+        batch_save_file: str=BATCH_SAVE_FILE, 
+        celltype_save_file: str=CELLTYPE_SAVE_FILE,
+        combiner: Callable=COMBINER,
+        dataset_normalize: Callable=DATASET_NORMALIZE,
+        batch_normalize: Callable=BATCH_NORMALIZE,
+        celltype_normalize: Callable=CELLTYPE_NORMALIZE,
         **kwargs):
     
     # normalization is mutually exclusive exclusive
@@ -54,36 +54,24 @@ def run(data: str=data,
     else:
         adatas = filter_batches(raw_counts(sc.read_h5ad(data)))
 
-    print("Scoring Batches")
-    scorer_batch(adatas, 
-                 data_folder=data_folder, 
-                 algorithm=algorithm, 
-                 dataset_name=dataset_name, 
-                 save_file=batch_save_file,
-                 batch_normalize=batch_normalize,
-                 processing=processing,
-                 **kwargs)
-    print("Scoring Cell Types")
-    scorer_celltype(adatas, 
-                    data_folder=data_folder, 
-                    algorithm=algorithm, 
-                    dataset_name=dataset_name, 
-                    save_file=celltype_save_file, 
-                    combiner=combiner,
-                    batch_normalize=batch_normalize,
-                    celltype_normalize=celltype_normalize,
-                    processing=processing,
-                    **kwargs)
+    score(adatas, 
+          data_folder=data_folder, 
+          algorithm=algorithm, 
+          dataset_name=dataset_name, 
+          batch_save_file=batch_save_file,
+          celltype_save_file=celltype_save_file, 
+          combiner=combiner,
+          batch_normalize=batch_normalize,
+          celltype_normalize=celltype_normalize,
+          processing=processing,
+          **kwargs)
     
     print("Plotting scores")
     print("\tFetching saved data")
     folder = f"{data_folder}/{dataset_name}/{algorithm.__name__}/{processing}/"
-    with open(f"{folder}{batch_save_file}.pkl", "rb") as f:
-        batch_scores = pickle.load(f)
-    with open(f"{folder}{batch_save_file}-jaccard.pkl", "rb") as f:
-        batch_scores_jaccard = pickle.load(f)
-    with open(f"{folder}{celltype_save_file}-{combiner.__name__}.pkl", "rb") as f:
-        celltype_scores = pickle.load(f)
+    batch_scores = json_reader(f"{folder}{batch_save_file}.json")
+    batch_scores_jaccard = json_reader(f"{folder}gjsi-scores.json")
+    celltype_scores = json_reader(f"{folder}{celltype_save_file}-{combiner.__name__}.json")
 
     batch_scores = {k:v for k, v in batch_scores.items() if k[0] != k[1]}
     celltype_scores = {k:v for k, v in celltype_scores.items() if k[0] != k[1]}
@@ -107,7 +95,7 @@ def seurat_run():
 if __name__ == "__main__":
     print("1")
     run(algorithm=scanorama, dataset_normalize=scib_normalize, verbose=False)
-    run(algorithm=scanorama, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
+    # run(algorithm=scanorama, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
     # print("2")
     # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)
     # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, combiner=amwjmsi, verbose=False)
@@ -137,7 +125,4 @@ if __name__ == "__main__":
     # run(algorithm=kruskal, combiner=amwjmsi, verbose=False)
 
     print("FINISHED!")
-
-    # run(algorithm=scanorama, combiner=amwjmsi, batch_normalize=scib_normalize)
-    # run(algorithm=kruskal, combiner=experiment_amwjmsi, normalize=False)
     pass

@@ -6,6 +6,8 @@ from typing import List, Dict, Tuple
     # user libraries
 from src.library.scorer import *
 
+
+# functions
 def plotter(
         d1: Dict[Tuple[str, str], float], 
         d2: Dict[Tuple[str, str], float], 
@@ -14,7 +16,10 @@ def plotter(
         annotations: Dict[Tuple[str, str], float]=None,
         show: bool=False) -> None:
     """
-        
+        Plots the batch vs. cell type scores
+        Includes:
+            Regression line
+        Colors do not annotate for anything. #TODO
     """
     # Get the x, y values + batch names
     x = [d1[key] for key in d1.keys() if key in d2.keys()]
@@ -35,7 +40,7 @@ def plotter(
 
     plt.title(title + f"\nR^2: {round(reg_score, 5)}\n {round(np.sum(np.abs(np.array(x)-np.array(y))), 5)}")
     plt.xlabel("Batch")
-    plt.ylabel("Celltypes (Ground Truth)")
+    plt.ylabel("Cell Types (Ground Truth)")
     plt.savefig(fname=save_file+".png", format="png")
     # plt.savefig(fname=save_file+".svg", format="svg") 
 
@@ -81,16 +86,3 @@ def calculate_regression(
 
 def rand_colors(x: List) -> List:
     return [np.random.choice(plt.rcParams["axes.prop_cycle"].by_key()['color']) for _ in x]
-
-# if __name__ == "__main__":
-#     with open("data/scanorama/pancreas/batch-scores-adjusted.pkl", "rb") as f:
-#         batch_scores = pickle.load(f)
-#     with open("data/scanorama/pancreas/batch-scores-adjusted.pkl", "rb") as f:
-#         batch_scores_jaccard = pickle.load(f)
-#     with open("data/scanorama/pancreas/celltype-scores-adjusted.pkl", "rb") as f:
-#         celltype_scores = pickle.load(f)
-    
-#     batch_scores = {k:v for k, v in batch_scores.items() if k[0] != k[1]}
-#     celltype_scores = {k:v for k, v in celltype_scores.items() if k[0] != k[1]}
-#     batch_scores_jaccard = {k:v for k, v in batch_scores_jaccard.items() if k[0] != k[1]}
-#     plotter(batch_scores, celltype_scores, "data/pancreas/pancreas-amwjmsmi", title="Pancreas: batch vs. celltype (Scanorama)")

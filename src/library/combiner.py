@@ -2,12 +2,13 @@
     # standard libraries
 import numpy as np
 import networkx as nx
-import scanpy as sc
 from anndata import AnnData
 from typing import List, Callable
     # user libraries
 from src.metrics.Scanorama.scanorama import find_alignments, scanorama
 
+
+# functions
     # helper function
 def count(
         adata: AnnData, 

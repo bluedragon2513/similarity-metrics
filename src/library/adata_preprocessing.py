@@ -68,15 +68,3 @@ def raw_counts(adata: AnnData) -> AnnData:
     )
     anndata.layers['counts'] = adata.layers['counts']
     return anndata
-
-# main method
-# if __name__ == "__main__":
-#     adata = sc.read_h5ad("data/preprocessed/human_pancreas_norm_complexBatch.h5ad")
-#     # hvg_filter = sc.pp.highly_variable_genes(adata, layer='counts', n_top_genes=2000, n_bins=20, flavor="cell_ranger", inplace=False)['highly_variable']
-#     hvg_filter = sc.pp.highly_variable_genes(adata, n_top_genes=2000, n_bins=20, flavor="cell_ranger", inplace=False)['highly_variable']
-#     anndata = AnnData(
-#         X=adata.layers['counts'][:,hvg_filter],
-#         obs=adata.obs.copy(),
-#     )
-#     anndata.layers['counts'] = adata.layers['counts'][:,hvg_filter]
-#     sc.write("data/preprocessed/human_pancreas_preprocessed.h5ad", anndata)

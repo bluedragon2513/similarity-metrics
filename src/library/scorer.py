@@ -1,21 +1,78 @@
 # imports
     # standard libraries
 import numpy as np
+import pandas as pd
 from anndata import AnnData
-import pickle
 from tqdm import trange
 from typing import List, Callable
     # user libraries
-import os
-print(f"{os.getcwd()}")
 from src.metrics.Scanorama.scanorama import scanorama
 from src.library.combiner import mwjmsi, amwjmsi, gjsi
 from src.library.scorer import *
 from src.library.adata_preprocessing import *
-import pandas as pd
+from src.library.json_handler import *
 # from seurat import * // for anthony to run
 
+
 # functions
+def score(
+        adatas: List[AnnData],
+        data_folder: str="data/", 
+        algorithm: Callable=scanorama, 
+        dataset_name: str="pancreas", 
+        batch_save_file: str="batch-scores", 
+        celltype_save_file: str="celltype-scores",
+        combiner: Callable=amwjmsi, 
+        batch_normalize: Callable=None,
+        celltype_normalize: Callable=None,
+        processing: str="",
+        **kwargs
+    ) -> None:
+    scorer_gjsi(adatas, 
+                 data_folder=data_folder, 
+                 algorithm=algorithm, 
+                 dataset_name=dataset_name, 
+                 save_file=batch_save_file,
+                 processing=processing)
+    scorer_batch(adatas, 
+                 data_folder=data_folder, 
+                 algorithm=algorithm, 
+                 dataset_name=dataset_name, 
+                 save_file=batch_save_file,
+                 batch_normalize=batch_normalize,
+                 processing=processing,
+                 **kwargs)
+    scorer_celltype(adatas, 
+                    data_folder=data_folder, 
+                    algorithm=algorithm, 
+                    dataset_name=dataset_name, 
+                    save_file=celltype_save_file, 
+                    combiner=combiner,
+                    batch_normalize=batch_normalize,
+                    celltype_normalize=celltype_normalize,
+                    processing=processing,
+                    **kwargs)
+
+def scorer_gjsi(
+        anndatas: List[AnnData], 
+        data_folder: str="data/",
+        algorithm: Callable=scanorama, 
+        dataset_name: str="pancreas", 
+        save_file: str="gjsi-scores",
+        processing: str="") -> None:
+    dict = {}
+    cell_types = np.unique([anndata.obs['celltype'].cat.categories for anndata in anndatas])
+    for i in trange(len(anndatas), desc="Scoring GJSI: "):
+        for j in range(i, len(anndatas)):
+            b1, b2 = anndatas[i], anndatas[j]
+            b1name, b2name = b1.obs['tech'].iloc[0], b2.obs['tech'].iloc[0]
+            score = gjsi(b1, b2, cell_types)
+
+            dict[(b1name, b2name)] = score
+
+    folder = f"{data_folder}/{dataset_name}/{algorithm.__name__}/{processing}/"
+    json_writer(f"{folder}/{save_file}.json", dict)
+
 def scorer_batch(
         anndatas: List[AnnData], 
         data_folder: str="data/",
@@ -26,21 +83,19 @@ def scorer_batch(
         processing: str="",
         **kwargs) -> None:
     batch_scores = {} # compute batch scores
-    batch_scores_jaccard = {}
-    for i in trange(len(anndatas)):
+    # batch_scores_jaccard = {}
+    for i in trange(len(anndatas), desc="Scoring Batches: "):
         for j in range(i, len(anndatas)):
             b1, b2 = anndatas[i], anndatas[j]
-            score = algorithm([b1.X,b2.X], normalize=batch_normalize, **kwargs)
+
             b1name, b2name = b1.obs['tech'].iloc[0], b2.obs['tech'].iloc[0]
+            score = algorithm([b1.X,b2.X], normalize=batch_normalize, **kwargs)
+
             batch_scores[(b1name, b2name)] = score
-            batch_scores_jaccard[(b1name, b2name)] = gjsi(b1, b2, np.unique([anndata.obs['celltype'].cat.categories for anndata in anndatas]))
     
     # save file
     folder = f"{data_folder}/{dataset_name}/{algorithm.__name__}/{processing}/"
-    with open(f"{folder}/{save_file}.pkl", "wb") as f:
-        pickle.dump(batch_scores, f)
-    with open(f"{folder}/{save_file}-jaccard.pkl", "wb") as f:
-        pickle.dump(batch_scores_jaccard, f)
+    json_writer(f"{folder}/{save_file}.json", batch_scores)
 
 def scorer_celltype(
         anndatas: List[AnnData],
@@ -57,7 +112,7 @@ def scorer_celltype(
     cell_types = np.unique([anndata.obs['celltype'].cat.categories for anndata in anndatas]) 
 
     celltype_scores = {} # compute celltype scores
-    for i in trange(len(anndatas)):
+    for i in trange(len(anndatas), desc="Scoring Cell Types: "):
         anndata_i = anndatas[i]
         batch_i = anndatas[i].obs['tech'].iloc[0]
 
@@ -74,8 +129,7 @@ def scorer_celltype(
                 **kwargs)
     
     folder = f"{data_folder}/{dataset_name}/{algorithm.__name__}/{processing}/"
-    with open(f"{folder}/{save_file}-{combiner.__name__}.pkl", "wb") as f:
-        pickle.dump(celltype_scores, f)
+    json_writer(f"{folder}/{save_file}-{combiner.__name__}.json", celltype_scores)
 
 def score_seurat(path: str) -> None:
     # adata = read_file(path)
@@ -116,7 +170,3 @@ def score_celltypes_seurat(path: str) -> None:
                 new_key = (store_key, key)
                 processed_dict[new_key] = dict_list[i][key] / 10
     return processed_dict
-
-# if __name__ == "__main__":
-#     with open(f"{0}p.pkl", "wb") as f:
-#         pickle.dump("", f)
