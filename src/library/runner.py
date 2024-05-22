@@ -106,8 +106,8 @@ def seurat_run():
 # main
 if __name__ == "__main__":
     print("1")
-    # run(algorithm=scanorama, dataset_normalize=scib_normalize, verbose=False)
-    # run(algorithm=scanorama, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
+    run(algorithm=scanorama, dataset_normalize=scib_normalize, verbose=False)
+    run(algorithm=scanorama, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
     # print("2")
     # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)
     # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, combiner=amwjmsi, verbose=False)
