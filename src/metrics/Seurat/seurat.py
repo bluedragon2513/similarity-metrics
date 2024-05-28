@@ -28,17 +28,17 @@ def seurat(datasets, normalize=False, **kwargs):
         datasets[1] = adata2
 
     print(datasets[0].n_obs, datasets[1].n_obs)
-    if(datasets[0].n_obs <= 50):
-        datasets[0] = addCells(datasets[0])
-    if(datasets[1].n_obs <= 50):
-        datasets[1] = addCells(datasets[1])
     print(datasets[0].n_obs, datasets[1].n_obs)
     adata_to_seurat(datasets[0], "dataset_1")
     adata_to_seurat(datasets[1], "dataset_2")
-    run_seurat("Seurat/data/temp")
+    if(datasets[0].n_obs <= 50 or datasets[1].n_obs <= 50):
+        run_seurat("Seurat/data", min(datasets[0].n_obs, datasets[1].n_obs))
+    else:
+        run_seurat("Seurat/data", 50)
     score = pd.read_csv('data/pancreas/celltype_scores_seurat.csv')
     print(score.iloc[0].iloc[1])
     return score.iloc[0].iloc[1]
+
 
 
 def addCells(dataset):
@@ -72,11 +72,12 @@ def adata_to_seurat(adatas, name):
         batch="sample_id",
     )
 
-def run_seurat(path):
+def run_seurat(path, dims):
     robjects.r("source('src/metrics/Seurat/Seurat.R')")
     function = robjects.r('run_seurat')
     r_string = robjects.StrVector([path])
-    function(r_string)
+    r_int = robjects.IntVector([dims])
+    function(r_string, r_int)
 
 
 if __name__ == "__main__":

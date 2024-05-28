@@ -46,7 +46,7 @@ preprocessing <- function(list) {
     return(list)
 }
 
-run_seurat <- function(path) {
+run_seurat <- function(path, dims) {
     directory <- path
     file_names <- list.files(path = directory, pattern = ".rds")
     data.list <- list()
@@ -58,7 +58,7 @@ run_seurat <- function(path) {
                                       l2.norm = FALSE,
                                       reduction = "cca",
                                       normalization.method = NULL,
-                                      dims = 1:50,
+                                      dims = 1:dims,
                                       k.anchor = 20,
                                       k.filter = 800,
                                       k.score = 20)
