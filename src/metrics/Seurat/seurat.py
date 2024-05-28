@@ -6,7 +6,7 @@ import rpy2.robjects as robjects
 import importlib.util
 import sys
 sys.path.append("src/library/adata_preprocessing.py")
-from library.adata_preprocessing import scib_normalize
+# from library.adata_preprocessing import scib_normalize
 import pandas as pd
 import numpy as np
 
@@ -39,16 +39,6 @@ def seurat(datasets, normalize=False, **kwargs):
     print(score.iloc[0].iloc[1])
     return score.iloc[0].iloc[1]
 
-
-
-def addCells(dataset):
-    double_cells = dataset.n_obs + 65
-    num_features = dataset.n_vars
-    new_dataset = ad.AnnData(np.concatenate((dataset.X, np.random.randn(double_cells - dataset.n_obs, num_features))))
-    new_dataset.layers['counts'] = new_dataset.X
-    return new_dataset
-
-
 def read_file(path):
     adata = sc.read_h5ad(path)
     return adata
@@ -68,7 +58,7 @@ def rds_filter_batches(adata):
 def adata_to_seurat(adatas, name):
     preprocessing.save_seurat(
         adata = adatas,
-        path = f"Seurat/data/temp/{name}.rds",
+        path = f"Seurat/data/{name}.rds",
         batch="sample_id",
     )
 
@@ -83,4 +73,4 @@ def run_seurat(path, dims):
 if __name__ == "__main__":
     adata = read_file("data/unpreprocessed/human_pancreas_norm_complexBatch.h5ad")
     dict = rds_filter_batches(adata)
-    retval = seurat([dict['inDrop1'], dict['inDrop1']], normalize=False)
+    retval = seurat([dict['celseq'], dict['inDrop3']], normalize=False)
