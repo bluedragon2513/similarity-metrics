@@ -6,7 +6,7 @@ import rpy2.robjects as robjects
 import importlib.util
 import sys
 sys.path.append("src/library/adata_preprocessing.py")
-from library.adata_preprocessing import scib_normalize
+from src.library.adata_preprocessing import scib_normalize
 import pandas as pd
 import numpy as np
 

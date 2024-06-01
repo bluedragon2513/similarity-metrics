@@ -10,6 +10,7 @@ from src.library.plotter import plotter
 from src.library.json_handler import *
 from src.metrics.Scanorama.scanorama import scanorama
 from src.metrics.Stress.stress import kruskal
+from src.metrics.Seurat.seurat import seurat
 
 # constants
 DATA = "data/pancreas/human_pancreas_norm_complexBatch.h5ad"
@@ -94,7 +95,7 @@ def seurat_run():
 # main
 if __name__ == "__main__":
     print("1")
-    run(algorithm=scanorama, dataset_normalize=scib_normalize, verbose=False)
+    run(algorithm=seurat, dataset_normalize=scib_normalize, verbose=False)
     # run(algorithm=scanorama, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
     # print("2")
     # run(algorithm=scanorama, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)

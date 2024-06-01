@@ -4362,20 +4362,40 @@ FindNN <- function(
     new.data = list('nnaa' = nnaa, 'nnab' = nnab, 'nnba' = nnba, 'nnbb' = nnbb, 'cells1' = cells1, 'cells2' = cells2)
   )
   # ----------------------------------------------------------------------
-  # Replace 'nnab@nn.dist' and 'nnba@nn.dist' with the correct attributes or slots
+  library(batchelor)
 
-  # Find mutual nearest neighbors
-  mutual_nn_ab <- intersect(nnab@nn.dist[, 1], nnba@nn.dist[, 1])
-  mutual_nn_ba <- intersect(nnba@nn.dist[, 1], nnab@nn.dist[, 1])
+  # Assuming `object` is your Seurat object and you have defined `cells1` and `cells2`
+  dim.data.self <- Embeddings(object = object[[nn.reduction]])[, nn.dims]
+  dims.cells1.self <- dim.data.self[cells1, ]
+  dims.cells2.self <- dim.data.self[cells2, ]
 
-  # Count the number of mutual nearest neighbors
-  nn_count_ab <- length(mutual_nn_ab)
-  nn_count_ba <- length(mutual_nn_ba)
+  # Find mutual nearest neighbors using batchelor's findMutualNN
+  mnn_result <- findMutualNN(dims.cells1.self, dims.cells2.self, k1 = 20, k2 = 20)
+
+  # Extract MNN pairs
+  mutual_nn_ab <- mnn_result$first  # Indices of MNNs in dataset1
+  mutual_nn_ba <- mnn_result$second # Indices of MNNs in dataset2
+
+  # Find mutual nearest neighbors by intersection
+  mutual_matches_ab <- intersect(mutual_nn_ab, mutual_nn_ba)
+  mutual_matches_ba <- intersect(mutual_nn_ba, mutual_nn_ab)
+
+  # Count the number of unique MNNs in each dataset
+  nn_count_ab <- length(unique(mutual_nn_ab))
+  nn_count_ba <- length(unique(mutual_nn_ba))
+  nn_count_mutual_ab <- length(unique(mutual_matches_ab))
+  nn_count_mutual_ba <- length(unique(mutual_matches_ba))
+
+  # Print the counts
+  print(nn_count_ab)
+  print(nn_count_ba)
+  print(nn_count_mutual_ab)
+  print(nn_count_mutual_ba)
 
   # Create a list to store neighbor counts
   neighbor.list <- list()
-  neighbor.list$nn_count_ab <- nn_count_ab
-  neighbor.list$nn_count_ba <- nn_count_ba
+  neighbor.list$nn_count_mutual_ab <- nn_count_mutual_ab
+  neighbor.list$nn_count_mutual_ba <- nn_count_mutual_ba
 
   return(neighbor.list)
   # ----------------------------------------------------------------------
