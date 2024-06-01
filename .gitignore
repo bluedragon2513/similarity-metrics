@@ -1,2 +1,5 @@
 data/preprocessed/*
 src/__pycache__
+*.h5ad
+src/sandbox.ipynb
+something.py
