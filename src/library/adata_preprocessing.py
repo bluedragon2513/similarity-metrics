@@ -42,7 +42,7 @@ def filter_celltypes(adata: AnnData) -> List[AnnData]:
     return adatas
 
 def filter_hvg(adata: AnnData) -> AnnData:
-    if (len(adata.X) <= 2000):
+    if (adata.X.shape[0] <= 2000):
         return adata
     sc.pp.filter_genes(adata, min_cells=5)
     hvg_filter = sc.pp.highly_variable_genes(adata, n_top_genes=2000, n_bins=20, flavor="cell_ranger", inplace=False)['highly_variable']

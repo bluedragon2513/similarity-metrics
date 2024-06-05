@@ -2,8 +2,11 @@
     # standard libraries
 import numpy as np
 import networkx as nx
+from scipy.sparse import issparse
+from scipy.sparse.base import spmatrix
 from anndata import AnnData
 from typing import List, Callable
+from numpy.typing import NDArray
     # user libraries
 from src.metrics.Scanorama.scanorama import find_alignments, scanorama
 
@@ -33,6 +36,20 @@ def max_count(
         all_cell_types: List[str]) -> int:
     return sum([max(count(adata1, ct), count(adata2, ct)) for ct in all_cell_types])
 
+    # helper method for batch normalization
+def batch_normalization(
+        adata1: NDArray | spmatrix,
+        adata2: NDArray | spmatrix,
+        normalize_func: Callable,
+    ) -> tuple[AnnData, AnnData]:
+    f = lambda x: x.toarray() if issparse(x) else x
+    adata = AnnData(np.concatenate((f(adata1.X), f(adata2.X))))
+    adata = normalize_func(adata)
+    adata1 = AnnData(adata.X[:adata1.X.shape[0]], obs=adata1.obs)
+    adata2 = AnnData(adata.X[adata1.X.shape[0]:], obs=adata2.obs)
+
+    return adata1, adata2
+
 # Generalized Jaccard Similarity Index
 def gjsi(
         adata1: AnnData, 
@@ -57,10 +74,7 @@ def mwjmsi(
         (not batch_normalize and not celltype_normalize)
     
     if batch_normalize:
-        adata = AnnData(np.concatenate((adata1.X, adata2.X)))
-        adata = batch_normalize(adata)
-        adata1 = AnnData(adata.X[:len(adata1.X)], obs=adata1.obs)
-        adata2 = AnnData(adata.X[len(adata1.X):], obs=adata2.obs)
+        adata1, adata2 = batch_normalization(adata1, adata2, batch_normalize)
 
     adatas1 = [adata1.X[adata1.obs['celltype'] == c] for c in all_cell_types]
     adatas2 = [adata2.X[adata2.obs['celltype'] == c] for c in all_cell_types]
@@ -91,10 +105,7 @@ def amwjmsi(
         (not batch_normalize and not celltype_normalize)
     
     if batch_normalize:
-        adata = AnnData(np.concatenate((adata1.X, adata2.X)))
-        adata = batch_normalize(adata)
-        adata1 = AnnData(adata.X[:len(adata1.X)], obs=adata1.obs)
-        adata2 = AnnData(adata.X[len(adata1.X):], obs=adata2.obs)
+        adata1, adata2 = batch_normalization(adata1, adata2, batch_normalize)
     
     adatas1 = [adata1.X[adata1.obs['celltype'] == c] for c in all_cell_types]
     adatas2 = [adata2.X[adata2.obs['celltype'] == c] for c in all_cell_types]
@@ -115,7 +126,7 @@ def amwjmsi(
             continue
         datas = [adatas1[ct], adatas2[ct]]
         sum += mins[ct][ct] * algorithm(datas, normalize=celltype_normalize, **kwargs)
-        maxs += max(len(adatas1[ct]), len(adatas2[ct]))
+        maxs += max(adatas1[ct].shape[0], adatas2[ct].shape[0])
 
     # get maximum weight bipartite graphs
     edge_dict = {}
@@ -132,8 +143,9 @@ def amwjmsi(
     matches = []
     # compute score
     for (i,j) in non_matching_matches:
-        sum += min(len(adatas1[i]),len(adatas2[j])) * edge_dict[(i,j)]
-        maxs += max(len(adatas1[i]), len(adatas2[j]))
+        pair = (i,j) if (i,j) in edge_dict else (j,i)
+        sum += min(adatas1[i].shape[0],adatas2[j].shape[0]) * edge_dict[pair]
+        maxs += max(adatas1[i].shape[0], adatas2[j].shape[0])
         matches.append(i)
         matches.append(j)
 
@@ -141,9 +153,9 @@ def amwjmsi(
     remaining1 = [i for i in unmatched1 if i not in matches]
     remaining2 = [j for j in unmatched2 if j not in matches]
     for r in remaining1:
-        maxs += len(adatas1[r])
+        maxs += adatas1[r].shape[0]
     for r in remaining2:
-        maxs += len(adatas2[r])
+        maxs += adatas2[r].shape[0]
 
     # compute 
     return sum/maxs

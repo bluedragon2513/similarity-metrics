@@ -1,7 +1,9 @@
 # imports
     # standard libraries
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import LabelEncoder
 from typing import List, Dict, Tuple
     # user libraries
 from src.library.scorer import *
@@ -14,12 +16,14 @@ def plotter(
         save_file: str, 
         title: str="", 
         annotations: Dict[Tuple[str, str], float]=None,
-        show: bool=False) -> None:
+        show: bool=False,
+        random_colors: bool=False,
+        b1_colors: bool=False) -> None:
     """
         Plots the batch vs. cell type scores
         Includes:
             Regression line
-        Colors do not annotate for anything. #TODO
+        Colors do not annotate for anything.
     """
     # Get the x, y values + batch names
     x = [d1[key] for key in d1.keys() if key in d2.keys()]
@@ -32,13 +36,19 @@ def plotter(
     plt.rc('ytick', labelsize=20)
     plt.rcParams.update({'font.size' : 20})
 
-    plt.scatter(x, y, c=rand_colors(x), s=1000)
+    # color and plot figure
+    colors = rand_colors(x) if random_colors else batch_color(batch_name) if b1_colors else None
+    plt.scatter(x, y, c=colors, s=1000)
 
     # calculate regression
     reg_x, reg_y, reg_score = calculate_regression(x, y)
     plt.plot(reg_x, reg_y)
 
-    plt.title(title + f"\nR^2: {round(reg_score, 5)}\n {round(np.sum(np.abs(np.array(x)-np.array(y))), 5)}")
+    # calculate average absolute difference
+    abs_diff = np.sum(np.abs(np.array(x) - np.array(y)))
+    avg_abs_diff = abs_diff / np.array(x).shape[0]
+
+    plt.title(title + f"\nR^2: {round(reg_score, 5)}\n {round(avg_abs_diff, 5)}")
     plt.xlabel("Batch")
     plt.ylabel("Cell Types (Ground Truth)")
     plt.savefig(fname=save_file+".png", format="png")
@@ -86,3 +96,10 @@ def calculate_regression(
 
 def rand_colors(x: List) -> List:
     return [np.random.choice(plt.rcParams["axes.prop_cycle"].by_key()['color']) for _ in x]
+
+def batch_color(batch_pair_name: List[Tuple[str, str]]) -> List:
+    batch1 = [b1 for (b1, _) in batch_pair_name]
+
+    # thank you to: https://stackoverflow.com/a/25730396/21168736
+    color = plt.cm.rainbow(np.linspace(0, 1, len(np.unique(batch1))))
+    return [color[x] for x in LabelEncoder().fit_transform(batch1)]

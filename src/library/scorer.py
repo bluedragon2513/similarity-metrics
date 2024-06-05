@@ -1,5 +1,6 @@
 # imports
     # standard libraries
+import os
 import numpy as np
 import pandas as pd
 from anndata import AnnData
@@ -26,32 +27,36 @@ def score(
         batch_normalize: Callable=None,
         celltype_normalize: Callable=None,
         processing: str="",
+        rerun=True,
         **kwargs
     ) -> None:
-    scorer_gjsi(adatas, 
-                 data_folder=data_folder, 
-                 algorithm=algorithm, 
-                 dataset_name=dataset_name, 
-                 save_file=batch_save_file,
-                 processing=processing)
-    scorer_batch(adatas, 
-                 data_folder=data_folder, 
-                 algorithm=algorithm, 
-                 dataset_name=dataset_name, 
-                 save_file=batch_save_file,
-                 batch_normalize=batch_normalize,
-                 processing=processing,
-                 **kwargs)
-    scorer_celltype(adatas, 
+    folder = f"{data_folder}/{dataset_name}/{algorithm.__name__}/{processing}/"
+    if rerun or not os.path.isfile(folder + "gjsi-scores.json"):
+        scorer_gjsi(adatas, 
                     data_folder=data_folder, 
                     algorithm=algorithm, 
                     dataset_name=dataset_name, 
-                    save_file=celltype_save_file, 
-                    combiner=combiner,
+                    processing=processing)
+    if rerun or not os.path.isfile(folder + "batch-scores.json"):
+        scorer_batch(adatas, 
+                    data_folder=data_folder, 
+                    algorithm=algorithm, 
+                    dataset_name=dataset_name, 
+                    save_file=batch_save_file,
                     batch_normalize=batch_normalize,
-                    celltype_normalize=celltype_normalize,
                     processing=processing,
                     **kwargs)
+    if rerun or not os.path.isfile(folder + f"celltype-scores-{combiner.__name__}.json"):
+        scorer_celltype(adatas, 
+                        data_folder=data_folder, 
+                        algorithm=algorithm, 
+                        dataset_name=dataset_name, 
+                        save_file=celltype_save_file, 
+                        combiner=combiner,
+                        batch_normalize=batch_normalize,
+                        celltype_normalize=celltype_normalize,
+                        processing=processing,
+                        **kwargs)
 
 def scorer_gjsi(
         anndatas: List[AnnData], 

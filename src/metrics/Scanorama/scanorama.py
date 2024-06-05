@@ -6,7 +6,7 @@ from sklearn.preprocessing import normalize
 from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from fbpca import pca
-from scipy.sparse import vstack
+from scipy.sparse import vstack, issparse
 import anndata as ad
     # user libraries
 from src.library.adata_preprocessing import scib_normalize
@@ -25,6 +25,7 @@ VERBOSE = 24
 
 def scanorama(datasets, normalize=None, **kwargs):
     if normalize:
+        datasets = list(map(lambda dataset: dataset.toarray() if issparse(dataset) else dataset, datasets))
         adata = ad.AnnData(np.concatenate((datasets[0], datasets[1])))
         adata = normalize(adata)
         datasets[0] = adata.X[:len(datasets[0])]
@@ -188,7 +189,7 @@ def reduce_dimensionality(X, dim_red_k=100):
 
 # Randomized SVD.
 def dimensionality_reduce(datasets, dimred=DIMRED):
-    X = np.vstack(datasets) # the scipy version somehow errors??
+    X = np.vstack([dataset.toarray() if issparse(dataset) else dataset for dataset in datasets]) # the scipy version somehow errors??
     X = reduce_dimensionality(X, dim_red_k=dimred)
     datasets_dimred = []
     base = 0
