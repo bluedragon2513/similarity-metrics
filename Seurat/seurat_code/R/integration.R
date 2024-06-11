@@ -3947,13 +3947,13 @@ FindAnchors_v3 <- function(
     eps = eps,
     verbose = verbose
   )
-  return(object.pair)
   object.pair <- FindAnchorPairs(
     object = object.pair,
     integration.name = "integrated",
     k.anchor = k.anchor,
     verbose = verbose
   )
+  return(object.pair)
   if (!is.na(x = k.filter)) {
     top.features <- TopDimFeatures(
       object = object.pair,
@@ -4148,33 +4148,52 @@ FindAnchorPairs <- function(
   if (verbose) {
     message("Finding anchors")
   }
-  # convert cell name to neighbor index
-  nn.cells1 <- neighbors$cells1
-  nn.cells2 <- neighbors$cells2
-  cell1.index <-  suppressWarnings(which(colnames(x = object) == nn.cells1, arr.ind = TRUE))
-  ncell <- 1:nrow(x = neighbors$nnab)
-  ncell <- ncell[ncell %in% cell1.index]
-  anchors <- list()
-  # pre allocate vector
-  anchors$cell1 <- rep(x = 0, length(x = ncell) * 5)
-  anchors$cell2 <- anchors$cell1
-  anchors$score <- anchors$cell1 + 1
-  idx <- 0
-  indices.ab <- Indices(object = neighbors$nnab)
-  indices.ba <- Indices(object = neighbors$nnba)
-  for (cell in ncell) {
-    neighbors.ab <- indices.ab[cell, 1:k.anchor]
-    mutual.neighbors <- which(
-      x = indices.ba[neighbors.ab, 1:k.anchor, drop = FALSE] == cell,
-      arr.ind = TRUE
-    )[, 1]
-    for (i in neighbors.ab[mutual.neighbors]){
-      idx <- idx + 1
-      anchors$cell1[idx] <- cell
-      anchors$cell2[idx] <- i
-      anchors$score[idx] <- 1
+  #------------------------------------------------------------------
+    # Convert cell name to neighbor index
+    nn.cells1 <- neighbors$cells1
+    nn.cells2 <- neighbors$cells2
+    cell1.index <- suppressWarnings(which(colnames(x = object) == nn.cells1, arr.ind = TRUE))
+    cell2.index <- suppressWarnings(which(neighbors$cells2 == nn.cells2, arr.ind = TRUE))
+    # cell2.index <- cell2.index - length(nn.cells1)
+    ncell_a <- 1:nrow(x = neighbors$nnab)
+    ncell_a <- ncell_a[ncell_a %in% cell1.index]
+    ncell_b <- 1:nrow(x = neighbors$nnba)
+    ncell_b <- ncell_b[ncell_b %in% cell2.index]
+
+    mnns_a <- c()
+    mnns_b <- c()
+    indices.ab <- Indices(object = neighbors$nnab)
+    indices.ba <- Indices(object = neighbors$nnba)
+
+    for (cell in ncell_a) {
+      neighbors.ab <- indices.ab[cell, 1:k.anchor]
+      mutual.neighbors_a <- which(
+        x = indices.ba[neighbors.ab, 1:k.anchor, drop = FALSE] == cell
+      )
+      mnns_a <- c(mnns_a, neighbors.ab[mutual.neighbors_a])
     }
-  }
+
+    for (cell in ncell_b) {
+      neighbors.ba <- indices.ba[cell, 1:k.anchor]
+      mutual.neighbors_b <- which(
+        x = indices.ab[neighbors.ba, 1:k.anchor, drop = FALSE] == cell
+      )
+      mnns_b <- c(mnns_b, neighbors.ba[mutual.neighbors_b])
+    }
+
+    mnns_a <- unique(mnns_a)
+    mnns_b <- unique(mnns_b)
+    mutual_mnns <- intersect(mnns_a, mnns_b)
+
+    print(length(mnns_a))
+    print(length(mnns_b))
+    print(length(mutual_mnns))
+
+    neighbor.list <- list()
+    neighbor.list$mnns_a <- length(mnns_a)
+    neighbor.list$mnns_b <- length(mnns_a)
+    return(neighbor.list)
+  #------------------------------------------------------------------
   anchors$cell1 <- anchors$cell1[1:idx]
   anchors$cell2 <- anchors$cell2[1:idx]
   anchors$score <- anchors$score[1:idx]
@@ -4361,44 +4380,43 @@ FindNN <- function(
     slot = 'neighbors',
     new.data = list('nnaa' = nnaa, 'nnab' = nnab, 'nnba' = nnba, 'nnbb' = nnbb, 'cells1' = cells1, 'cells2' = cells2)
   )
-  # ----------------------------------------------------------------------
-  library(batchelor)
+  # # ----------------------------------------------------------------------
+  # library(batchelor)
 
-  # Assuming `object` is your Seurat object and you have defined `cells1` and `cells2`
-  dim.data.self <- Embeddings(object = object[[nn.reduction]])[, nn.dims]
-  dims.cells1.self <- dim.data.self[cells1, ]
-  dims.cells2.self <- dim.data.self[cells2, ]
+  # # Assuming `object` is your Seurat object and you have defined `cells1` and `cells2`
+  # dim.data.self <- Embeddings(object = object[[nn.reduction]])[, nn.dims]
+  # dims.cells1.self <- dim.data.self[cells1, ]
+  # dims.cells2.self <- dim.data.self[cells2, ]
+  # # Find mutual nearest neighbors using batchelor's findMutualNN
+  # mnn_result <- findMutualNN(dims.cells1.self, dims.cells2.self, k1 = 20, k2 = 20)
 
-  # Find mutual nearest neighbors using batchelor's findMutualNN
-  mnn_result <- findMutualNN(dims.cells1.self, dims.cells2.self, k1 = 20, k2 = 20)
+  # # Extract MNN pairs
+  # mutual_nn_ab <- mnn_result$first  # Indices of MNNs in dataset1
+  # mutual_nn_ba <- mnn_result$second # Indices of MNNs in dataset2
 
-  # Extract MNN pairs
-  mutual_nn_ab <- mnn_result$first  # Indices of MNNs in dataset1
-  mutual_nn_ba <- mnn_result$second # Indices of MNNs in dataset2
+  # # Find mutual nearest neighbors by intersection
+  # mutual_matches_ab <- intersect(mutual_nn_ab, mutual_nn_ba)
+  # mutual_matches_ba <- intersect(mutual_nn_ba, mutual_nn_ab)
 
-  # Find mutual nearest neighbors by intersection
-  mutual_matches_ab <- intersect(mutual_nn_ab, mutual_nn_ba)
-  mutual_matches_ba <- intersect(mutual_nn_ba, mutual_nn_ab)
+  # # Count the number of unique MNNs in each dataset
+  # nn_count_ab <- length(unique(mutual_nn_ab))
+  # nn_count_ba <- length(unique(mutual_nn_ba))
+  # nn_count_mutual_ab <- length(unique(mutual_matches_ab))
+  # nn_count_mutual_ba <- length(unique(mutual_matches_ba))
 
-  # Count the number of unique MNNs in each dataset
-  nn_count_ab <- length(unique(mutual_nn_ab))
-  nn_count_ba <- length(unique(mutual_nn_ba))
-  nn_count_mutual_ab <- length(unique(mutual_matches_ab))
-  nn_count_mutual_ba <- length(unique(mutual_matches_ba))
+  # # Print the counts
+  # print(nn_count_ab)
+  # print(nn_count_ba)
+  # print(nn_count_mutual_ab)
+  # print(nn_count_mutual_ba)
 
-  # Print the counts
-  print(nn_count_ab)
-  print(nn_count_ba)
-  print(nn_count_mutual_ab)
-  print(nn_count_mutual_ba)
+  # # Create a list to store neighbor counts
+  # neighbor.list <- list()
+  # neighbor.list$nn_count_mutual_ab <- nn_count_mutual_ab
+  # neighbor.list$nn_count_mutual_ba <- nn_count_mutual_ba
 
-  # Create a list to store neighbor counts
-  neighbor.list <- list()
-  neighbor.list$nn_count_mutual_ab <- nn_count_mutual_ab
-  neighbor.list$nn_count_mutual_ba <- nn_count_mutual_ba
-
-  return(neighbor.list)
-  # ----------------------------------------------------------------------
+  # return(neighbor.list)
+  # # # ----------------------------------------------------------------------
   return(object)
 }
 

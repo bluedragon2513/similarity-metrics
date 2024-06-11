@@ -1,0 +1,2 @@
+run(algorithm=seurat, data="data/pancreas/human_pancreas_norm_complexBatch.h5ad", verbose=False)
+    run(algorithm=seurat, data="data/pancreas/human_pancreas_norm_complexBatch.h5ad", combiner=amwjmsi, verbose=False)

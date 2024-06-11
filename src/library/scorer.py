@@ -31,8 +31,7 @@ def score(
     scorer_gjsi(adatas, 
                  data_folder=data_folder, 
                  algorithm=algorithm, 
-                 dataset_name=dataset_name, 
-                 save_file=batch_save_file,
+                 dataset_name=dataset_name,
                  processing=processing)
     scorer_batch(adatas, 
                  data_folder=data_folder, 
@@ -69,7 +68,6 @@ def scorer_gjsi(
             score = gjsi(b1, b2, cell_types)
 
             dict[(b1name, b2name)] = score
-
     folder = f"{data_folder}/{dataset_name}/{algorithm.__name__}/{processing}/"
     json_writer(f"{folder}/{save_file}.json", dict)
 

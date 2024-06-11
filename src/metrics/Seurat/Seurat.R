@@ -64,7 +64,16 @@ run_seurat <- function(path, dims) {
                                       k.score = 20)
     cells_1 <- ncol(data.list[[1]])
     cells_2 <- ncol(data.list[[2]])
-    score <- max(anchors[[1]][[1]] / cells_1, anchors[[1]][[2]] / cells_2)
+    score1 <- anchors[[1]][[1]] / cells_1
+    score2 <- anchors[[1]][[2]] / cells_2
+    score <- max(score1, score2)
+    if (score > 1) {
+        score <- min(score1, score2)
+    }
+    if (score > 1) {
+        score <- 1
+    }
+    # score <- max(anchors[[1]][[1]] / cells_1, anchors[[1]][[2]] / cells_2)
     # matrix <- IntegrateData(anchors, normalization.method = NULL)
     # data_frame <- as.data.frame(matrix)
     # for(i in 1:length(file_names)) {
