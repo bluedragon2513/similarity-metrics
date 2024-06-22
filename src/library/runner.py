@@ -87,11 +87,6 @@ def run(data: str=DATA,
 
     print("done")
 
-def seurat_run():
-    batch_scores = score_seurat('data/preprocessed/human_pancreas_preprocessed.h5ad')
-    celltype_scores = score_celltypes_seurat('data/preprocessed/human_pancreas_preprocessed.h5ad')
-    plotter(batch_scores, celltype_scores, "/Users/carsonnannini/Research/similarity-metrics/data/seurat", "Batch vs Celltype (Seurat)")
-
 # main
 if __name__ == "__main__":
     # print("1")

@@ -515,7 +515,7 @@ DietSeurat <- function(
     if (is_present(arg = dep.args[[lyr]])) {
       if (is.null(x = layers)) {
         layers <- unique(x = unlist(x = lapply(
-          X = Assays(object = object),
+          X = names(object@assays),
           FUN = function(x) {
             return(Layers(object = object[[x]]))
           }
@@ -534,8 +534,8 @@ DietSeurat <- function(
     }
   }
   object <- UpdateSlots(object = object)
-  assays <- assays %||% Assays(object = object)
-  assays <- intersect(x = assays, y = Assays(object = object))
+  assays <- assays %||% names(object@assays)
+  assays <- intersect(x = assays, y = names(object@assays))
   if (!length(x = assays)) {
     abort(message = "No assays provided were found in the Seurat object")
   }
@@ -558,7 +558,7 @@ DietSeurat <- function(
   if (!length(x = layers)) {
     abort(message = "None of the requested layers found")
   }
-  for (assay in Assays(object = object)) {
+  for (assay in names(object@assays)) {
     if (!(assay %in% assays)) {
       object[[assay]] <- NULL
       next
@@ -576,11 +576,11 @@ DietSeurat <- function(
           object[[assay]][[lyr]] <- NULL
           object
         }, error = function(e) {
-          if (lyr == "data"){
+          if (lyr == "data") {
             object[[assay]][[lyr]] <- sparseMatrix(i = 1, j = 1, x = 1,
-                         dims = dim(object[[assay]][[lyr]]),
-                         dimnames = dimnames(object[[assay]][[lyr]]))
-          } else{
+                                                   dims = dim(object[[assay]][[lyr]]),
+                                                   dimnames = dimnames(object[[assay]][[lyr]]))
+          } else {
             slot(object = object[[assay]], name = lyr) <- new(Class = "dgCMatrix")
           }
           message("Converting layer ", lyr, " in assay ",
@@ -620,15 +620,16 @@ DietSeurat <- function(
     object[[ob]] <- NULL
   }
   cells.keep <- list()
-  for (assay in  Assays(object = object)) {
-    cells.keep[[assay]] <- colnames(x = object[[assay]] )
+  for (assay in names(object@assays)) {
+    cells.keep[[assay]] <- colnames(x = object[[assay]])
   }
   cells.keep <- intersect(colnames(x = object), unlist(cells.keep))
-  if (length(cells.keep) <- ncol(x = object)) {
+  if (length(cells.keep) < ncol(x = object)) {
     object <- subset(object, cells = cells.keep)
   }
   return(object)
 }
+
 
 #' Filter stray beads from Slide-seq puck
 #'

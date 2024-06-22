@@ -311,26 +311,37 @@ FindIntegrationAnchors <- function(
   }
   # determine all anchors
   anchoring.fxn <- function(row) {
-  i <- combinations[row, 1]
-  j <- combinations[row, 2]
-  object.1 <- object.list[[i]]
-  object.2 <- object.list[[j]]
-
-  # Ensure the correct assays and reductions are set
-  DefaultAssay(object.1) <- assay[i]
-  DefaultAssay(object.2) <- assay[j]
-
-  # suppress key duplication warning
-  suppressWarnings(object.1[["ToIntegrate"]] <- object.1[[assay[i]]])
-  DefaultAssay(object.1) <- "ToIntegrate"
-  if (reduction %in% Reductions(object.1)) {
-    slot(object.1[[reduction]], "assay.used") <- "ToIntegrate"
-  }
-  suppressWarnings(object.2[["ToIntegrate"]] <- object.2[[assay[j]]])
-  DefaultAssay(object.2) <- "ToIntegrate"
-  if (reduction %in% Reductions(object.2)) {
-    slot(object.2[[reduction]], "assay.used") <- "ToIntegrate"
-  }
+    i <- combinations[row, 1]
+    j <- combinations[row, 2]
+    object.1 <- DietSeurat(
+      object = object.list[[i]],
+      assays = assay[i],
+      features = anchor.features,
+      counts = FALSE,
+      scale.data = TRUE,
+      dimreducs = reduction
+    )
+    object.2 <- DietSeurat(
+      object = object.list[[j]],
+      assays = assay[j],
+      features = anchor.features,
+      counts = FALSE,
+      scale.data = TRUE,
+      dimreducs = reduction
+    )
+    # suppress key duplication warning
+    suppressWarnings(object.1[["ToIntegrate"]] <- object.1[[assay[i]]])
+    DefaultAssay(object = object.1) <- "ToIntegrate"
+    if (reduction %in% Reductions(object = object.1)) {
+      slot(object = object.1[[reduction]], name = "assay.used") <- "ToIntegrate"
+    }
+    object.1 <- DietSeurat(object = object.1, assays = "ToIntegrate", scale.data = TRUE, dimreducs = reduction)
+    suppressWarnings(object.2[["ToIntegrate"]] <- object.2[[assay[j]]])
+    DefaultAssay(object = object.2) <- "ToIntegrate"
+    if (reduction %in% Reductions(object = object.2)) {
+      slot(object = object.2[[reduction]], name = "assay.used") <- "ToIntegrate"
+    }
+    object.2 <- DietSeurat(object = object.2, assays = "ToIntegrate", scale.data = TRUE, dimreducs = reduction)
     object.pair <- switch(
       EXPR = reduction,
       'cca' = {
@@ -345,11 +356,11 @@ FindIntegrationAnchors <- function(
           rescale = FALSE,
           verbose = verbose
         )
-        # if (l2.norm){
-        #   object.pair <- L2Dim(object = object.pair, reduction = reduction)
-        #   reduction <- paste0(reduction, ".l2")
-        #   nn.reduction <- reduction
-        # }
+        if (l2.norm){
+          object.pair <- L2Dim(object = object.pair, reduction = reduction)
+          reduction <- paste0(reduction, ".l2")
+          nn.reduction <- reduction
+        }
         reduction.2 <- character()
         object.pair
       },
@@ -442,8 +453,32 @@ FindIntegrationAnchors <- function(
     # anchors[, 2] <- anchors[, 2] + offsets[j]
     return(anchors)
   }
-  all.anchors <- lapply(X = 1:nrow(x = combinations), FUN = anchoring.fxn)
+  if (nbrOfWorkers() == 1) {
+    all.anchors <- pblapply(
+      X = 1:nrow(x = combinations),
+      FUN = anchoring.fxn
+    )
+  } else {
+    all.anchors <- future_lapply(
+      X = 1:nrow(x = combinations),
+      FUN = anchoring.fxn,
+      future.seed = TRUE
+    )
+  }
   return(all.anchors)
+  all.anchors <- do.call(what = 'rbind', args = all.anchors)
+  all.anchors <- rbind(all.anchors, all.anchors[, c(2, 1, 3)])
+  all.anchors <- AddDatasetID(anchor.df = all.anchors, offsets = offsets, obj.lengths = objects.ncell)
+  command <- LogSeuratCommand(object = object.list[[1]], return.command = TRUE)
+  anchor.set <- new(Class = "IntegrationAnchorSet",
+                    object.list = object.list,
+                    reference.objects = reference %||% seq_along(object.list),
+                    anchors = all.anchors,
+                    offsets = offsets,
+                    anchor.features = anchor.features,
+                    command = command
+  )
+  return(anchor.set)
 }
 
 # Merge dataset and perform reciprocal SVD projection, adding new dimreducs
@@ -4183,11 +4218,10 @@ FindAnchorPairs <- function(
 
     mnns_a <- unique(mnns_a)
     mnns_b <- unique(mnns_b)
-    mutual_mnns <- intersect(mnns_a, mnns_b)
 
+    print("\n")
     print(length(mnns_a))
     print(length(mnns_b))
-    print(length(mutual_mnns))
 
     neighbor.list <- list()
     neighbor.list$mnns_a <- length(mnns_a)

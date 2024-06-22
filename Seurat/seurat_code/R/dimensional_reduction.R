@@ -158,11 +158,14 @@ JackStraw <- function(
 #' @export
 #'
 L2Dim <- function(object, reduction, new.dr = NULL, new.key = NULL) {
-  l2.norm <- L2Norm(mat = Embeddings(object[[reduction]]))
-  if(is.null(new.dr)){
+  # Manual L2 normalization of embeddings
+  embeddings <- Embeddings(object[[reduction]])
+  l2.norm <- embeddings / sqrt(rowSums(embeddings^2))
+  
+  if (is.null(new.dr)) {
     new.dr <- paste0(reduction, ".l2")
   }
-  if(is.null(new.key)){
+  if (is.null(new.key)) {
     new.key <- paste0("L2", Key(object[[reduction]]))
   }
   colnames(x = l2.norm) <- paste0(new.key, 1:ncol(x = l2.norm))
@@ -179,6 +182,7 @@ L2Dim <- function(object, reduction, new.dr = NULL, new.key = NULL) {
   object[[new.dr]] <- l2.dr
   return(object)
 }
+
 
 #' L2-Normalize CCA
 #'

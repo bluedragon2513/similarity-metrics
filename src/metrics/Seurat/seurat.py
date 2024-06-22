@@ -6,7 +6,7 @@ import rpy2.robjects as robjects
 import importlib.util
 import sys
 sys.path.append("src/library/adata_preprocessing.py")
-from src.library.adata_preprocessing import scib_normalize
+# from src.library.adata_preprocessing import scib_normalize
 import pandas as pd
 import numpy as np
 
@@ -33,20 +33,22 @@ def seurat(datasets, normalize=False, **kwargs):
     print(datasets[0].n_obs, datasets[1].n_obs)
     adata_to_seurat(datasets[0], "dataset_1")
     adata_to_seurat(datasets[1], "dataset_2")
-    if(datasets[0].n_obs == 21 or datasets[1].n_obs == 21):
-        run_seurat("Seurat/datasets", 20)
-    elif(datasets[0].n_obs <= 50 or datasets[1].n_obs <= 50):
-        run_seurat("Seurat/datasets", min(datasets[0].n_obs, datasets[1].n_obs) - 1)
+    if(datasets[0].n_obs == 6 or datasets[1].n_obs == 6):
+        run_seurat("Seurat/datasets", 5, 5)
+    elif(datasets[0].n_obs <= 30 or datasets[1].n_obs <= 30):
+        run_seurat("Seurat/datasets", min(datasets[0].n_obs, datasets[1].n_obs) - 1, min(datasets[0].n_obs, datasets[1].n_obs) - 1)
+    # elif(datasets[0].n_obs <= 50 or datasets[1].n_obs <= 50):
+    #     run_seurat("Seurat/datasets", min(datasets[0].n_obs, datasets[1].n_obs) - 1, 30)
     else:
-        run_seurat("Seurat/datasets", 50)
+        run_seurat("Seurat/datasets", 30, 30)
     score = pd.read_csv('data/pancreas/celltype_scores_seurat.csv')
     retval = float(score.iloc[0].iloc[1])
-    print(round(retval, 2))
-    return round(retval, 2)
+    print(retval)
+    return retval
 
 def check_dataset(dataset):
-    if(dataset.n_obs < 20):
-        dataset = addCells(dataset, 21 - dataset.n_obs)
+    if(dataset.n_obs < 6):
+        dataset = addCells(dataset, 6 - dataset.n_obs)
     return dataset
 
 def addCells(dataset, add):
@@ -80,15 +82,16 @@ def adata_to_seurat(adatas, name):
         batch="sample_id",
     )
 
-def run_seurat(path, dims):
+def run_seurat(path, dims, score):
     robjects.r("source('src/metrics/Seurat/Seurat.R')")
     function = robjects.r('run_seurat')
     r_string = robjects.StrVector([path])
-    r_int = robjects.IntVector([dims])
-    function(r_string, r_int)
+    r_dims = robjects.IntVector([dims])
+    r_score = robjects.IntVector([score])
+    function(r_string, r_dims, r_score)
 
 
 if __name__ == "__main__":
     adata = read_file("data/pancreas/human_pancreas_norm_complexBatch.h5ad")
     dict = rds_filter_batches(adata)
-    retval = seurat([dict['inDrop3'], dict['smarter']], normalize=False)
+    retval = seurat([dict['inDrop2'], dict['inDrop4']], normalize=False)
