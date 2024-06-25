@@ -9,6 +9,7 @@ from src.library.adata_preprocessing import *
 from src.library.plotter import plotter
 from src.library.json_handler import *
 from src.metrics.Scanorama.scanorama import scanorama
+from src.metrics.LCC.lcc import lcc
 from src.metrics.Stress.stress import kruskal
 
 # constants
@@ -117,9 +118,9 @@ def seurat_run():
 
 # main
 if __name__ == "__main__":
-    # alg = scanorama
+    alg = lcc
     # print("1 - dataset normalization")
-    # run(algorithm=alg, dataset_normalize=scib_normalize, verbose=False)
+    run(algorithm=alg, dataset_normalize=scib_normalize, verbose=False)
     # run(algorithm=alg, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
     # print("2 - batch normalization")
     # run(algorithm=alg, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)
