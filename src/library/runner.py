@@ -90,8 +90,8 @@ def run(data: str=DATA,
 # main
 if __name__ == "__main__":
     # print("1")
-    # run(algorithm=seurat, dataset_normalize=scib_normalize, verbose=False)
-    # run(algorithm=seurat, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
+    run(algorithm=seurat, dataset_normalize=scib_normalize, verbose=False)
+    run(algorithm=seurat, dataset_normalize=scib_normalize, combiner=amwjmsi, verbose=False)
     # print("2")
     # run(algorithm=seurat, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)
     # run(algorithm=seurat, batch_normalize=scib_normalize, celltype_normalize=None, combiner=amwjmsi, verbose=False)

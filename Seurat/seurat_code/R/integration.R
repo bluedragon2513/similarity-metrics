@@ -4187,7 +4187,7 @@ FindAnchorPairs <- function(
     # Convert cell name to neighbor index
     nn.cells1 <- neighbors$cells1
     nn.cells2 <- neighbors$cells2
-    cell1.index <- suppressWarnings(which(colnames(x = object) == nn.cells1, arr.ind = TRUE))
+    cell1.index <- suppressWarnings(which(neighbors$cells1 == nn.cells1, arr.ind = TRUE))
     cell2.index <- suppressWarnings(which(neighbors$cells2 == nn.cells2, arr.ind = TRUE))
     # cell2.index <- cell2.index - length(nn.cells1)
     ncell_a <- 1:nrow(x = neighbors$nnab)
@@ -4207,7 +4207,6 @@ FindAnchorPairs <- function(
       )
       mnns_a <- c(mnns_a, neighbors.ab[mutual.neighbors_a])
     }
-
     for (cell in ncell_b) {
       neighbors.ba <- indices.ba[cell, 1:k.anchor]
       mutual.neighbors_b <- which(
@@ -4215,7 +4214,6 @@ FindAnchorPairs <- function(
       )
       mnns_b <- c(mnns_b, neighbors.ba[mutual.neighbors_b])
     }
-
     mnns_a <- unique(mnns_a)
     mnns_b <- unique(mnns_b)
 
@@ -4225,7 +4223,7 @@ FindAnchorPairs <- function(
 
     neighbor.list <- list()
     neighbor.list$mnns_a <- length(mnns_a)
-    neighbor.list$mnns_b <- length(mnns_a)
+    neighbor.list$mnns_b <- length(mnns_b)
     return(neighbor.list)
   #------------------------------------------------------------------
   anchors$cell1 <- anchors$cell1[1:idx]

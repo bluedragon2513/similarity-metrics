@@ -1,2 +1,3 @@
-run(algorithm=seurat, data="data/pancreas/human_pancreas_norm_complexBatch.h5ad", verbose=False)
-    run(algorithm=seurat, data="data/pancreas/human_pancreas_norm_complexBatch.h5ad", combiner=amwjmsi, verbose=False)
+ print("2")
+    run(algorithm=seurat, batch_normalize=scib_normalize, celltype_normalize=None, verbose=False)
+    run(algorithm=seurat, batch_normalize=scib_normalize, celltype_normalize=None, combiner=amwjmsi, verbose=False)

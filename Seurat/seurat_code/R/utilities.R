@@ -1941,7 +1941,7 @@ ChunkPoints <- function(dsize, csize) {
 # @return returns l2-normalized matrix
 #
 #
-L2Norm <- function(mat, MARGIN = 1){
+L2Norm2 <- function(mat, MARGIN = 1){
   normalized <- Sweep(
     x = mat,
     MARGIN = MARGIN,
