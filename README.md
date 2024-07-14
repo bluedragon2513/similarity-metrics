@@ -4,12 +4,12 @@
 The purpose of this project is to compare the effectiveness of methods used by algorithms such as Seurat and Scanorama when it comes to determining the integrability or similarity between two data batches. By comparing these methods, we can determine which techniques or procedures are more effective, which will ultimately help us formulate our own algorithm that can compute the similarity between batches with higher accuracy.
 
 ## Recommended Specs for Running: 
-R: version = 4.3.3.
-Python: version >= 3.11.4.
+- R: version = 4.3.3.
+- Python: version >= 3.11.4.
 
 ## Plans for Future
-Test each of our algorithms with more datasets other than the "pancreas" and "lung" datasets. 
-Continue to investigate new methods and procedures for measuring similarity between batches. 
+In the future, we will looking to move forward with testing each of our algorithms with other data other than the "pancreas" and "lung" datasets. 
+We will also continue to investigate new methods and procedures for measuring similarity between batches. 
 
 ## Parameters for Execution: 
 - algorithm: determines the algorithm being used to obtain the scores between batches. This parameter can be set to seurat, scanorama or kruskal. 
@@ -19,9 +19,13 @@ Continue to investigate new methods and procedures for measuring similarity betw
 - dataset_normalize: If this parameter is set to scib_normalize, the whole dataset will be normalized prior to being filtered.
 - combiner: If this parameter is set to modified jaccard similarity (mwjmsi), it will use the modified jaccard similarity formula to calculate celltype scores. If it is set to adjusted modified jaccard similarity (amwjmsi), it will use the adjusted jaccard similarity formula to calculate the celltype score. 
 
-Example: run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", combiner=amwjmsi)
-         Will run the pipeline with scanorama on without any normalization
-        
+
+Example: 
+...
+run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", combiner=amwjmsi)
+...
+Will run the pipeline with scanorama on without any normalization
+
 ## Preprocessing 
 ### Normalization:
 - Dataset Normalization: Before filtering the batches, use scib_normalize() from scib to preprocess the entire dataset.
@@ -94,16 +98,16 @@ normalization used.
 ### Graph
 - Read the dictionaries from the json files.
 - Create a scatter plot where:
-1) Each point represents a pair of batches.
-2) X-axis: batch scores
-2) Y-axis: celltype scores
-3) R-Score (described below)
-4) Sum of Absolute Difference (described below) 
+  1) Each point represents a pair of batches.
+  2) X-axis: batch scores
+  2) Y-axis: celltype scores
+  3) R-Score (described below)
+  4) Sum of Absolute Difference (described below) 
 - Four plots should be generated
-1) mwjmsi with annotations (batch pair labels) 
-2) mwjmsi without annotations
-3) amwjmsi with annotations
-4) amwjmsi without annotations 
+  1) mwjmsi with annotations (batch pair labels) 
+  2) mwjmsi without annotations
+  3) amwjmsi with annotations
+  4) amwjmsi without annotations 
 - The location the plots are saved in is dependent on the normalization and algorithm used.
 - Written as a .png image. 
 - Ran in plotter().
