@@ -21,9 +21,9 @@ We will also continue to investigate new methods and procedures for measuring si
 
 
 Example: 
-'''
+```
 run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", combiner=amwjmsi)
-'''
+```
 Will run the pipeline with scanorama on without any normalization
 
 ## Preprocessing 
