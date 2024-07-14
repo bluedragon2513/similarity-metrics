@@ -22,9 +22,9 @@ We will also continue to investigate new methods and procedures for measuring si
 
 Example: 
 ```
-run(algorithm=scanorama, data="data/preprocessed/human_pancreas_norm_complexBatch.h5ad", combiner=amwjmsi)
+run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize, combiner=amwjmsi)
 ```
-Will run the pipeline with scanorama on without any normalization
+Will run the pipeline with scanorama with celltype normalization. 
 
 ## Preprocessing 
 ### Normalization:
@@ -49,7 +49,7 @@ Will run the pipeline with scanorama on without any normalization
 ### Seurat:
 - Save pairs of batches/celltypes as SeuratObjects in dataset_1.rds and dataset_2.rds using adata_to_seurat().
 - Call run_seurat() in Seurat.R with appropriate parameters.
-- If the number of cells in either dataset is less than 3, duplicate one of the cells so there are 3 cells. 
+- If the number of cells in either dataset is less than 3, duplicate one of the cells so there are 3. This is due to the fact  that FindIntegrationAnchors() won't accept dataset's with cells less than 3. 
 - Read objects and pass them into FindIntegrationAnchors() (found in Integration.R) with the default parameters. 
   FindIntegrationAnchors()'s parameters will be adjusted for batches/celltypes with cells less than the number of
   dimensions being reduced.
