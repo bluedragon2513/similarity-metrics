@@ -21,10 +21,10 @@ def rds_filter_batches(adata: AnnData) -> Dict[str, AnnData]:
 
 def filter_batches(adata: AnnData) -> List[AnnData]:
     adatas = []
-    for c in adata.obs['tech'].cat.categories:
+    for c in adata.obs['batch'].cat.categories:
         new_adata = AnnData(
-            X=adata.X[adata.obs['tech'] == c, :],
-            obs=adata.obs[adata.obs['tech'] == c]
+            X=adata.X[adata.obs['batch'] == c, :],
+            obs=adata.obs[adata.obs['batch'] == c]
         )
         new_adata.layers['counts'] = new_adata.X
         adatas.append(new_adata)
@@ -32,17 +32,17 @@ def filter_batches(adata: AnnData) -> List[AnnData]:
 
 def filter_celltypes(adata: AnnData) -> List[AnnData]:
     adatas = []
-    for c in adata.obs['celltype'].cat.categories:
+    for c in adata.obs['cell_type'].cat.categories:
         new_adata = AnnData(
-            X=adata.X[adata.obs['celltype'] == c, :],
-            obs=adata.obs[adata.obs['celltype'] == c]
+            X=adata.X[adata.obs['cell_type'] == c, :],
+            obs=adata.obs[adata.obs['cell_type'] == c]
         )
         new_adata.layers['counts'] = new_adata.X
         adatas.append(new_adata)
     return adatas
 
 def filter_hvg(adata: AnnData) -> AnnData:
-    if (len(adata.X) <= 2000):
+    if (adata.X.shape[0] <= 2000):
         return adata
     sc.pp.filter_genes(adata, min_cells=5)
     hvg_filter = sc.pp.highly_variable_genes(adata, n_top_genes=2000, n_bins=20, flavor="cell_ranger", inplace=False)['highly_variable']

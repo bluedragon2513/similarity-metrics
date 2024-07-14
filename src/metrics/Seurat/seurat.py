@@ -9,6 +9,7 @@ sys.path.append("src/library/adata_preprocessing.py")
 # from src.library.adata_preprocessing import scib_normalize
 import pandas as pd 
 import numpy as np
+import scipy.sparse as sp
 
 # Obtain the score between two datasets using Seurat's library
 #
@@ -71,18 +72,20 @@ def check_dataset(dataset):
 # @param add_value: add 'add_value' to replicated cell so dataset can work with Seurat (float)
 #
 # @ return: modified dataset
-def addCells(dataset, add, add_value=0.1):
+def addCells(dataset, add, add_value=0.01):
     num_cells = dataset.n_obs
     indices_to_duplicate = np.random.choice(num_cells, add, replace=True)
     duplicated_cells = dataset.X[indices_to_duplicate, :]
-    duplicated_cells += add_value
-    duplicated_cells[duplicated_cells < 0] = 0
-    new_data = np.concatenate((dataset.X, duplicated_cells), axis=0)
+    duplicated_cells_dense = duplicated_cells.toarray()
+    duplicated_cells_dense += add_value
+    duplicated_cells_dense[duplicated_cells_dense < 0] = 0
+    duplicated_cells_sparse = sp.csr_matrix(duplicated_cells_dense)
+    new_data = sp.vstack([dataset.X, duplicated_cells_sparse])
     new_dataset = ad.AnnData(new_data)
     new_dataset.layers['counts'] = new_dataset.X
     return new_dataset
 
-# Read file path for data being evaluated
+# Read file path for data being evaluated. Used for testing
 #
 # @param path: relative path of file (String)
 #

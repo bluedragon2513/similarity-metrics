@@ -1,5 +1,6 @@
 # imports
     # standard libraries
+import os
 import numpy as np
 import pandas as pd
 from anndata import AnnData
@@ -26,31 +27,36 @@ def score(
         batch_normalize: Callable=None,
         celltype_normalize: Callable=None,
         processing: str="",
+        rerun=True,
         **kwargs
     ) -> None:
-    scorer_gjsi(adatas, 
-                 data_folder=data_folder, 
-                 algorithm=algorithm, 
-                 dataset_name=dataset_name,
-                 processing=processing)
-    scorer_batch(adatas, 
-                 data_folder=data_folder, 
-                 algorithm=algorithm, 
-                 dataset_name=dataset_name, 
-                 save_file=batch_save_file,
-                 batch_normalize=batch_normalize,
-                 processing=processing,
-                 **kwargs)
-    scorer_celltype(adatas, 
+    folder = f"{data_folder}/{dataset_name}/{algorithm.__name__}/{processing}/"
+    if rerun or not os.path.isfile(folder + "gjsi-scores.json"):
+        scorer_gjsi(adatas, 
                     data_folder=data_folder, 
                     algorithm=algorithm, 
                     dataset_name=dataset_name, 
-                    save_file=celltype_save_file, 
-                    combiner=combiner,
+                    processing=processing)
+    if rerun or not os.path.isfile(folder + "batch-scores.json"):
+        scorer_batch(adatas, 
+                    data_folder=data_folder, 
+                    algorithm=algorithm, 
+                    dataset_name=dataset_name, 
+                    save_file=batch_save_file,
                     batch_normalize=batch_normalize,
-                    celltype_normalize=celltype_normalize,
                     processing=processing,
                     **kwargs)
+    if rerun or not os.path.isfile(folder + f"celltype-scores-{combiner.__name__}.json"):
+        scorer_celltype(adatas, 
+                        data_folder=data_folder, 
+                        algorithm=algorithm, 
+                        dataset_name=dataset_name, 
+                        save_file=celltype_save_file, 
+                        combiner=combiner,
+                        batch_normalize=batch_normalize,
+                        celltype_normalize=celltype_normalize,
+                        processing=processing,
+                        **kwargs)
 
 def scorer_gjsi(
         anndatas: List[AnnData], 
@@ -60,11 +66,11 @@ def scorer_gjsi(
         save_file: str="gjsi-scores",
         processing: str="") -> None:
     dict = {}
-    cell_types = np.unique([anndata.obs['celltype'].cat.categories for anndata in anndatas])
+    cell_types = np.unique([anndata.obs['cell_type'].cat.categories for anndata in anndatas])
     for i in trange(len(anndatas), desc="Scoring GJSI: "):
         for j in range(i, len(anndatas)):
             b1, b2 = anndatas[i], anndatas[j]
-            b1name, b2name = b1.obs['tech'].iloc[0], b2.obs['tech'].iloc[0]
+            b1name, b2name = b1.obs['batch'].iloc[0], b2.obs['batch'].iloc[0]
             score = gjsi(b1, b2, cell_types)
 
             dict[(b1name, b2name)] = score
@@ -86,7 +92,7 @@ def scorer_batch(
         for j in range(i, len(anndatas)):
             b1, b2 = anndatas[i], anndatas[j]
 
-            b1name, b2name = b1.obs['tech'].iloc[0], b2.obs['tech'].iloc[0]
+            b1name, b2name = b1.obs['batch'].iloc[0], b2.obs['batch'].iloc[0]
             score = algorithm([b1.X,b2.X], normalize=batch_normalize, **kwargs)
 
             batch_scores[(b1name, b2name)] = score
@@ -107,16 +113,16 @@ def scorer_celltype(
         processing: str="",
         **kwargs) -> None:
     # get all of the cell types
-    cell_types = np.unique([anndata.obs['celltype'].cat.categories for anndata in anndatas]) 
+    cell_types = np.unique([anndata.obs['cell_type'].cat.categories for anndata in anndatas]) 
 
     celltype_scores = {} # compute celltype scores
     for i in trange(len(anndatas), desc="Scoring Cell Types: "):
         anndata_i = anndatas[i]
-        batch_i = anndatas[i].obs['tech'].iloc[0]
+        batch_i = anndatas[i].obs['batch'].iloc[0]
 
         for j in range(i, len(anndatas)):
             anndata_j = anndatas[j]
-            batch_j = anndatas[j].obs['tech'].iloc[0]
+            batch_j = anndatas[j].obs['batch'].iloc[0]
             celltype_scores[(batch_i,batch_j)] = combiner(
                 anndata_i, 
                 anndata_j, 
