@@ -24,7 +24,7 @@ Example:
 ```
 run(algorithm=scanorama, batch_normalize=None, celltype_normalize=scib_normalize, combiner=amwjmsi)
 ```
-Will run the pipeline with scanorama with celltype normalization. 
+Will run the pipeline with scanorama and celltype normalization. 
 
 ## Preprocessing 
 ### Normalization:
